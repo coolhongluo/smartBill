@@ -1,0 +1,8 @@
+{
+  "permissions": { "openapi": [] },
+  "timeout": 60,
+  "memorySize": 512,
+  "runtime": "Nodejs18.15",
+  "handler": "index.main",
+  "description": "语音识别云函数：腾讯云流式 ASR 主力通道。timeout 60s —— 30s 录音按 1:1 实时率发送需 30s，20s 会必然超时。"
+}

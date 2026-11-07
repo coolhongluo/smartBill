@@ -1,0 +1,96 @@
+page { background: #FAF8F5; color: #3D3935; }
+.page { min-height: 100vh; padding: 32rpx; box-sizing: border-box; }
+.card { background: #FFFFFF; border-radius: 28rpx; padding: 8rpx 32rpx; margin-bottom: 24rpx; }
+.card-title { font-size: 30rpx; font-weight: 600; padding: 28rpx 0 12rpx; }
+.row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 28rpx 0; border-bottom: 1rpx solid #F5F2EE; font-size: 28rpx;
+}
+.row:last-child { border-bottom: none; }
+.val { color: #A8A29E; font-size: 25rpx; }
+.val-mono { font-size: 22rpx; word-break: break-all; text-align: right; max-width: 400rpx; }
+.tap:active { background: #FAF8F5; }
+.arrow { color: #CFC8C0; font-size: 36rpx; }
+
+/* ── 个人资料（头像昵称填写能力） ── */
+.profile-box { display: flex; align-items: center; padding: 8rpx 0 24rpx; }
+.avatar-btn {
+  padding: 0; margin: 0; background: transparent; border: none;
+  width: 120rpx; height: 120rpx; border-radius: 50%; flex-shrink: 0;
+  line-height: normal;
+}
+.avatar-btn::after { border: none; }
+.avatar { width: 120rpx; height: 120rpx; border-radius: 50%; display: block; }
+.avatar-empty {
+  background: #F5F2EE; color: #A8A29E; font-size: 24rpx;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.profile-fields { flex: 1; margin-left: 24rpx; }
+.nickname-input {
+  font-size: 28rpx; color: #3D3935;
+  border-bottom: 1rpx solid #F5F2EE; padding: 12rpx 0;
+}
+.profile-fields .diag-hint { padding: 8rpx 0 0; }
+
+/* ── 数据库诊断 ── */
+.diag-hint {
+  padding: 4rpx 0 24rpx;
+  font-size: 22rpx;
+  color: #B8B0A8;
+  line-height: 1.7;
+}
+.diag-result {
+  padding-bottom: 24rpx;
+}
+.diag-verdict {
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  margin-bottom: 20rpx;
+}
+.diag-verdict.is-ok {
+  background: #EAF6F0;
+  color: #2E7D5B;
+}
+.diag-verdict.is-bad {
+  background: #FDECEC;
+  color: #B93636;
+}
+.diag-env {
+  font-size: 22rpx;
+  color: #A8A29E;
+  margin-bottom: 16rpx;
+}
+.diag-step {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F5F2EE;
+}
+.diag-icon {
+  width: 40rpx;
+  font-size: 26rpx;
+  color: #3D9970;
+  flex-shrink: 0;
+}
+.diag-step-body { flex: 1; }
+.diag-step-name { font-size: 26rpx; }
+.diag-step-detail {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #A8A29E;
+  line-height: 1.6;
+}
+.diag-note {
+  margin-top: 20rpx;
+  padding: 16rpx 20rpx;
+  background: #FAF8F5;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: #7C6F64;
+  line-height: 1.7;
+}
+.privacy {
+  margin-top: 40rpx; padding: 0 16rpx;
+  font-size: 22rpx; color: #B8B0A8; line-height: 1.8; text-align: center;
+}

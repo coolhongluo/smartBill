@@ -1,0 +1,8 @@
+{
+  "permissions": { "openapi": [] },
+  "timeout": 10,
+  "memorySize": 256,
+  "runtime": "Nodejs18.15",
+  "handler": "index.main",
+  "description": "用户信息云函数：openid 查询与笔数统计。"
+}

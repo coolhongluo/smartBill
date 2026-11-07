@@ -1,0 +1,8 @@
+{
+  "permissions": { "openapi": [] },
+  "timeout": 10,
+  "memorySize": 256,
+  "runtime": "Nodejs18.15",
+  "handler": "index.main",
+  "description": "类目查询云函数：返回类目树与候选。"
+}

@@ -1,0 +1,273 @@
+<view class="page">
+
+  <!-- 账本切换：家庭 / 个人（家庭模式双空间） -->
+  <view class="ledger-switch">
+    <view
+      class="ledger-tab {{ledger === 'family' ? 'is-on' : ''}}"
+      data-ledger="family"
+      bindtap="onSwitchLedger"
+    >家庭账本</view>
+    <view
+      class="ledger-tab {{ledger === 'personal' ? 'is-on' : ''}}"
+      data-ledger="personal"
+      bindtap="onSwitchLedger"
+    >个人账本</view>
+  </view>
+
+  <!-- 本月概览（切换账本时先回加载态，避免旧账本数字挂着） -->
+  <view class="summary" wx:if="{{monthTotal !== null || summaryLoading}}">
+    <view class="summary-loading" wx:if="{{summaryLoading}}">切换中…</view>
+    <block wx:else>
+      <view class="summary-label">本月支出</view>
+      <view class="summary-amount">{{monthTotal}}</view>
+      <view class="summary-sub">已记 {{monthCount}} 笔</view>
+    </block>
+  </view>
+
+  <!-- 实时文本上屏：流式 ASR 接入后此处由 partialText 实时驱动 -->
+  <view class="bubble-wrap" wx:if="{{recordState === 'recognizing' || partialText}}">
+    <view class="bubble {{recordState === 'recognizing' ? 'is-recognizing' : ''}}">
+      <text class="bubble-text">{{partialText || finalText}}</text>
+      <view class="bubble-status" wx:if="{{recordState === 'recognizing'}}">识别中…</view>
+    </view>
+  </view>
+
+  <!-- 降级提示：刻意可见，不静默降级 -->
+  <view class="fallback-tip" wx:if="{{fallbackTip}}">{{fallbackTip}}</view>
+
+  <!-- 结果区 -->
+  <view class="result-wrap" wx:if="{{result}}">
+
+    <!-- 高置信：已入账 -->
+    <view class="card card-saved" wx:if="{{result.kind === 'saved'}}">
+      <view class="saved-mark">✓</view>
+      <view class="saved-amount">{{result.amount}}</view>
+      <view class="saved-cat" wx:if="{{result.categoryName}}">{{result.categoryName}}</view>
+      <!-- 备注摘要：让用户看到「系统替我记成了什么」，不对可以立刻发现 -->
+      <view class="saved-note" wx:if="{{result.note}}">{{result.note}}</view>
+      <view class="undo-row" wx:if="{{undoCountdown > 0}}">
+        <text class="undo-timer">{{undoCountdown}} 秒后可撤销</text>
+        <button class="btn-undo" bindtap="onUndo">撤销</button>
+      </view>
+    </view>
+
+    <!-- 中置信：Top3 一键确认 -->
+    <view class="card card-confirm" wx:elif="{{result.kind === 'confirm'}}">
+      <view class="confirm-head">
+        <text class="confirm-title">{{result.ui || '请确认'}}</text>
+        <text class="confirm-amount">{{result.amount}} 元</text>
+      </view>
+      <view class="vague-hint" wx:if="{{result.amountCertain === false}}">
+        金额听起来不太确定，请核对
+      </view>
+      <view class="rule-hint" wx:if="{{result.strongRule}}">
+        已按场景规则归类，请确认
+      </view>
+      <view class="rule-hint" wx:if="{{result.customRule}}">
+        已按你的自定义类目归类，请确认
+      </view>
+      <!-- 备注摘要：确认前展示，用户知道这笔账会带上什么上下文 -->
+      <view class="confirm-note" wx:if="{{result.note}}">
+        <text class="confirm-note-label">备注</text>
+        <text class="confirm-note-text">{{result.note}}</text>
+      </view>
+      <view class="cand-list">
+        <view
+          class="cand"
+          wx:for="{{result.candidates}}"
+          wx:key="categoryId"
+          data-category-id="{{item.categoryId}}"
+          data-index="{{index}}"
+          bindtap="onConfirmCategory"
+        >
+          <view class="cand-dot" style="background:{{item.color}}"></view>
+          <view class="cand-body">
+            <view class="cand-name">{{item.categoryName}}<text class="cand-custom-tag" wx:if="{{item.custom}}">自定义</text></view>
+            <view class="cand-path">{{item.categoryPath}}</view>
+          </view>
+          <view class="cand-arrow">›</view>
+        </view>
+      </view>
+      <view class="guide-tip" bindtap="onOpenCategoryPicker">都不对？手动填金额和类目 →</view>
+    </view>
+
+    <!-- 低置信：引导手动 -->
+    <view class="card card-guide" wx:elif="{{result.kind === 'guide'}}">
+      <view class="confirm-head">
+        <text class="confirm-title">{{result.ui || '这个不太确定'}}</text>
+        <text class="confirm-amount">{{result.amount}} 元</text>
+      </view>
+      <view class="confirm-note" wx:if="{{result.note}}">
+        <text class="confirm-note-label">备注</text>
+        <text class="confirm-note-text">{{result.note}}</text>
+      </view>
+      <view class="cand-list">
+        <view
+          class="cand"
+          wx:for="{{result.candidates}}"
+          wx:key="categoryId"
+          data-category-id="{{item.categoryId}}"
+          data-index="{{index}}"
+          bindtap="onConfirmCategory"
+        >
+          <view class="cand-dot" style="background:{{item.color}}"></view>
+          <view class="cand-name">{{item.categoryName}}</view>
+          <view class="cand-arrow">›</view>
+        </view>
+      </view>
+      <view class="guide-tip" bindtap="onOpenCategoryPicker">都不对？点这里手动选类目 →</view>
+    </view>
+
+    <view class="btn-dismiss" bindtap="onDismissResult">关闭</view>
+  </view>
+
+  <!-- 错误提示：必须显示在手动面板「之上」，否则提交失败时错误会被面板挡住，
+       用户只看到按钮没反应却拿不到任何原因 -->
+  <view class="err-bar" wx:if="{{errorMsg}}">
+    <text class="err-bar-text">{{errorMsg}}</text>
+    <text class="err-bar-close" bindtap="onClearError">✕</text>
+  </view>
+
+  <!-- 手动输入面板 -->
+  <view class="manual-panel" wx:if="{{manualPanel}}">
+    <view class="mp-head">
+      <text class="mp-title">手动记一笔</text>
+      <text class="mp-close" bindtap="onToggleManual">✕</text>
+    </view>
+
+    <!-- 子模式切换 -->
+    <view class="mp-tabs">
+      <view
+        class="mp-tab {{manualMode === 'text' ? 'is-on' : ''}}"
+        data-mode="text"
+        bindtap="onSwitchManualMode"
+      >写一句话</view>
+      <view
+        class="mp-tab {{manualMode === 'direct' ? 'is-on' : ''}}"
+        data-mode="direct"
+        bindtap="onSwitchManualMode"
+      >直接填金额</view>
+    </view>
+
+    <!-- 文字模式：走完整 AI 链路 -->
+    <view class="mp-body" wx:if="{{manualMode === 'text'}}">
+      <!--
+        textarea 的两个坑（都会让输入内容丢失）：
+        1. focus 不能写成恒为 true 的表达式（如 manualMode === 'text'）。
+           onInput 每敲一个字就 setData，组件被反复重建/重新聚焦，
+           输入被打断 —— 界面上能看到字，但 this.data.manualText 始终是空。
+           正确做法：用真实会变的开关，且只在面板展开那一刻为 true。
+        2. value 绑定必须保留（受控组件），但不能同时给 auto-height，
+           两者在高版本基础库下会互相触发重排。
+      -->
+      <textarea
+        id="manual-input"
+        class="mp-textarea"
+        value="{{manualText}}"
+        bindinput="onManualInput"
+        bindconfirm="onManualSubmit"
+        bindblur="onManualBlur"
+        placeholder="例如：买菜 100，或者 超市268"
+        placeholder-class="mp-ph"
+        maxlength="60"
+        auto-height="{{false}}"
+        show-confirm-bar
+        cursor-spacing="24"
+        focus="{{mpFocus}}"
+      />
+      <view class="mp-hint">写法和说话一样，AI 会自动判断金额和类目</view>
+      <button class="mp-submit" bindtap="onManualSubmit">记下来</button>
+    </view>
+
+    <!-- 直填模式：跳过 LLM -->
+    <view class="mp-body" wx:elif="{{manualMode === 'direct'}}">
+      <view class="mp-field">
+        <text class="mp-label">金额</text>
+        <view class="mp-amount-box">
+          <text class="mp-yuan">¥</text>
+          <input
+            id="manual-amount-input"
+            class="mp-amount"
+            type="digit"
+            value="{{manualAmount}}"
+            bindinput="onManualAmountInput"
+            placeholder="0.00"
+            placeholder-class="mp-ph"
+          />
+        </view>
+      </view>
+
+      <view class="mp-field">
+        <text class="mp-label">类目</text>
+        <view class="mp-cat-box" bindtap="openCatPicker">
+          <text class="{{manualCategoryLabel ? 'mp-cat-text' : 'mp-cat-text mp-cat-empty'}}">
+            {{manualCategoryLabel || '点击选择类目'}}
+          </text>
+          <text class="mp-cat-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="mp-field">
+        <text class="mp-label">日期</text>
+        <picker mode="date" value="{{manualDate}}" bindchange="onManualDateChange">
+          <view class="mp-cat-box">
+            <text class="mp-cat-text">{{manualDate}}</text>
+            <text class="mp-cat-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="mp-field">
+        <text class="mp-label">备注</text>
+        <input
+          class="mp-input"
+          value="{{manualNote}}"
+          bindinput="onManualNoteInput"
+          placeholder="选填，例如：和邻居一起"
+          placeholder-class="mp-ph"
+          maxlength="30"
+        />
+      </view>
+
+      <button class="mp-submit" bindtap="onManualDirectSubmit">保存</button>
+    </view>
+  </view>
+
+  <!-- ══════════ 类目选择器（实现已抽为 components/cat-picker 组件） ══════════ -->
+  <cat-picker
+    id="cat-picker"
+    visible="{{catPickerVisible}}"
+    bind:select="onCatPicked"
+    bind:cancel="onCatPickerCancel"
+  />
+
+
+  <!-- ══════════ 底部操作区 ══════════ -->
+  <view class="mic-area">
+    <!-- 手动入口始终可见：ASR 未接入时它是唯一可用路径 -->
+    <view class="alt-entry" bindtap="onToggleManual">
+      <text class="alt-icon">⌨</text>
+      <text class="alt-text">{{manualPanel ? '收起' : '手动输入'}}</text>
+    </view>
+
+    <view class="mic-row">
+      <view
+        class="mic {{recordState === 'recording' ? 'mic-active' : ''}}"
+        bindtouchstart="onRecordStart"
+        bindtouchend="onRecordEnd"
+        bindtouchcancel="onRecordCancel"
+      >
+        <view class="mic-ring"></view>
+        <text class="mic-icon">🎤</text>
+      </view>
+    </view>
+
+    <view class="mic-hint">
+      {{recordState === 'recording' ? '松开发送，上滑取消' : '长按说话记账'}}
+    </view>
+  </view>
+
+  <!-- 手动面板展开时，给底部留出空间避免遮挡 -->
+  <view class="bottom-spacer" wx:if="{{manualPanel}}"></view>
+
+</view>

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "类目管理",
+  "usingComponents": {
+    "cat-create": "/components/cat-create/cat-create"
+  }
+}

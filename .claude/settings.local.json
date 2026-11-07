@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/hooks/wiki-reminder.sh)",
+      "Bash(command -v jq)"
+    ]
+  }
+}

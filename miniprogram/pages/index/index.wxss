@@ -1,0 +1,508 @@
+page {
+  background: #FAF8F5;
+  color: #3D3935;
+  font-size: 28rpx;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 32rpx 32rpx 200rpx;
+  box-sizing: border-box;
+}
+
+/* ── 账本切换（个人 / 家庭） ── */
+.ledger-switch {
+  display: flex;
+  justify-content: center;
+  gap: 12rpx;
+  margin: 8rpx 0 0;
+}
+.ledger-tab {
+  padding: 10rpx 32rpx;
+  font-size: 26rpx;
+  color: #A8A29E;
+  background: #FFFFFF;
+  border: 2rpx solid #EDE8E1;
+  border-radius: 999rpx;
+}
+.ledger-tab.is-on {
+  color: #FFFFFF;
+  background: #7C6F64; /* 全项目主按钮同款暖棕 */
+  border-color: #7C6F64;
+}
+
+/* ── 本月概览 ── */
+.summary {
+  text-align: center;
+  padding: 48rpx 0 40rpx;
+}
+.summary-label {
+  font-size: 26rpx;
+  color: #A8A29E;
+}
+.summary-amount {
+  font-size: 76rpx;
+  font-weight: 600;
+  color: #3D3935;
+  margin: 12rpx 0 8rpx;
+  /* 等宽数字，避免金额变化时宽度跳动 */
+  font-variant-numeric: tabular-nums;
+}
+.summary-sub {
+  font-size: 24rpx;
+  color: #A8A29E;
+}
+/* 切换账本时的概览加载态（复用概览区，不闪空白） */
+.summary-loading {
+  padding: 28rpx 0;
+  font-size: 26rpx;
+  color: #A8A29E;
+}
+
+/* ── 语音气泡 ── */
+.bubble-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 24rpx 0;
+}
+.bubble {
+  max-width: 70%;
+  padding: 24rpx 32rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+.bubble.is-recognizing {
+  /* 识别中给一个轻微呼吸感，让用户知道系统在工作 */
+  animation: breathe 1.4s ease-in-out infinite;
+}
+.bubble-text {
+  font-size: 30rpx;
+  line-height: 1.5;
+}
+.bubble-status {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #B8B0A8;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.62; }
+}
+
+.fallback-tip {
+  padding: 16rpx 24rpx;
+  background: #FFF4E5;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  color: #B87A2E;
+  margin: 16rpx 0;
+  text-align: center;
+}
+
+/* ── 结果卡片 ── */
+.result-wrap { margin: 32rpx 0; }
+
+.card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-saved { text-align: center; }
+.saved-mark {
+  width: 72rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 50%;
+  background: #3D9970;
+  color: #FFFFFF;
+  font-size: 40rpx;
+  margin: 0 auto 24rpx;
+}
+.saved-amount {
+  font-size: 56rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.saved-cat {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #A8A29E;
+}
+/* 备注摘要：入账后立刻可见，用户当场就能发现「记错了」 */
+.saved-note {
+  display: inline-block;
+  margin-top: 16rpx;
+  padding: 8rpx 20rpx;
+  background: #F5F2EE;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: #7C6F64;
+}
+.undo-row {
+  margin-top: 32rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #F0EDE9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.undo-timer {
+  font-size: 24rpx;
+  color: #A8A29E;
+  margin-right: 24rpx;
+}
+.btn-undo {
+  margin: 0;
+  padding: 8rpx 32rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #7C6F64;
+  background: #F5F2EE;
+  border-radius: 999rpx;
+}
+.btn-undo::after { border: none; }
+
+.confirm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8rpx;
+}
+.confirm-title { font-size: 28rpx; color: #7C6F64; }
+.confirm-amount {
+  font-size: 40rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.vague-hint, .rule-hint {
+  margin: 12rpx 0;
+  padding: 12rpx 20rpx;
+  background: #FFF4E5;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: #B87A2E;
+}
+
+/* 备注摘要（确认卡片里）：告诉用户这笔账会带上什么上下文 */
+.confirm-note {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 16rpx;
+  padding: 14rpx 20rpx;
+  background: #FAF8F5;
+  border-radius: 12rpx;
+}
+.confirm-note-label {
+  font-size: 22rpx;
+  color: #B8B0A8;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+.confirm-note-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #7C6F64;
+  line-height: 1.5;
+}
+
+.cand-list { margin-top: 20rpx; }
+.cand {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 8rpx;
+  border-bottom: 1rpx solid #F5F2EE;
+}
+.cand:last-child { border-bottom: none; }
+.cand:active { background: #FAF8F5; }
+.cand-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+.cand-body { flex: 1; }
+.cand-name { font-size: 30rpx; }
+.cand-path {
+  font-size: 22rpx;
+  color: #B8B0A8;
+  margin-top: 4rpx;
+}
+.cand-arrow {
+  color: #CFC8C0;
+  font-size: 36rpx;
+}
+.guide-tip {
+  margin-top: 24rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #A8A29E;
+}
+
+.btn-dismiss {
+  margin-top: 24rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #B8B0A8;
+  padding: 16rpx;
+}
+
+.error-wrap {
+  margin: 32rpx 0;
+  padding: 32rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  text-align: center;
+}
+.error-text {
+  color: #D94F4F;
+  font-size: 26rpx;
+  margin-bottom: 20rpx;
+}
+.btn-outline {
+  margin: 0 auto;
+  width: 60%;
+  font-size: 26rpx;
+  color: #7C6F64;
+  background: transparent;
+  border: 1rpx solid #E5E0DA;
+  border-radius: 999rpx;
+}
+.btn-outline::after { border: none; }
+
+/* 错误条：置于面板之上（z-index 高于 .manual-panel），确保任何时候都可见 */
+.err-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 28rpx;
+  margin: 24rpx 0;
+  background: #FDECEC;
+  border-radius: 16rpx;
+  border-left: 6rpx solid #D94F4F;
+  z-index: 20;
+}
+.err-bar-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #B93636;
+  line-height: 1.5;
+  word-break: break-all;
+}
+.err-bar-close {
+  font-size: 30rpx;
+  color: #D94F4F;
+  padding: 0 8rpx;
+  flex-shrink: 0;
+}
+
+/* ── 手动输入面板 ── */
+.manual-panel {
+  margin: 24rpx 0;
+  padding: 32rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+}
+.mp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.mp-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.mp-close {
+  font-size: 32rpx;
+  color: #CFC8C0;
+  padding: 8rpx 16rpx;
+}
+
+.mp-tabs {
+  display: flex;
+  background: #F5F2EE;
+  border-radius: 999rpx;
+  padding: 6rpx;
+  margin-bottom: 28rpx;
+}
+.mp-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  font-size: 26rpx;
+  color: #7C6F64;
+  border-radius: 999rpx;
+}
+.mp-tab.is-on {
+  background: #FFFFFF;
+  color: #3D3935;
+  font-weight: 500;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.mp-textarea {
+  width: 100%;
+  min-height: 140rpx;
+  padding: 24rpx;
+  background: #FAF8F5;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.mp-ph { color: #C4BDB4; }
+.mp-hint {
+  margin: 16rpx 0 24rpx;
+  font-size: 22rpx;
+  color: #A8A29E;
+}
+
+.mp-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.mp-label {
+  width: 90rpx;
+  font-size: 26rpx;
+  color: #A8A29E;
+  flex-shrink: 0;
+}
+.mp-amount-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background: #FAF8F5;
+  border-radius: 16rpx;
+}
+.mp-yuan {
+  font-size: 32rpx;
+  color: #7C6F64;
+  margin-right: 12rpx;
+}
+.mp-amount {
+  flex: 1;
+  font-size: 38rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mp-cat-box {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background: #FAF8F5;
+  border-radius: 16rpx;
+}
+.mp-cat-text {
+  font-size: 28rpx;
+}
+.mp-cat-empty { color: #C4BDB4; }
+.mp-cat-arrow { color: #CFC8C0; font-size: 32rpx; }
+.mp-input {
+  flex: 1;
+  padding: 20rpx 24rpx;
+  background: #FAF8F5;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+
+.mp-submit {
+  margin: 12rpx 0 0;
+  background: #7C6F64;
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 500;
+  border-radius: 999rpx;
+  line-height: 2.4;
+}
+.mp-submit::after { border: none; }
+.mp-submit:active { background: #625749; }
+
+/* ── 类目选择器样式已迁至 components/cat-picker/cat-picker.wxss ──
+/* 保留 .cand-custom-tag：语音识别的候选列表用它标注自定义类目 */
+.cand-custom-tag {
+  display: inline-block;
+  margin-left: 10rpx;
+  padding: 2rpx 12rpx;
+  font-size: 20rpx;
+  color: #7C6F64;
+  background: #F2EFEA;
+  border-radius: 999rpx;
+  vertical-align: middle;
+}
+
+
+/* ── 录音按钮 ── */
+.mic-area {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24rpx 0 40rpx;
+  background: linear-gradient(to top, #FAF8F5 65%, rgba(250, 248, 245, 0));
+  text-align: center;
+  z-index: 10;
+}
+.mic-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 16rpx;
+}
+/* 手动入口：ASR 未接入时它是唯一可用路径，必须一眼可见 */
+.alt-entry {
+  display: inline-flex;
+  align-items: center;
+  padding: 12rpx 32rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1rpx solid #E5E0DA;
+  border-radius: 999rpx;
+}
+.alt-icon {
+  font-size: 26rpx;
+  color: #7C6F64;
+  margin-right: 12rpx;
+}
+.alt-text { font-size: 25rpx; color: #7C6F64; }
+.bottom-spacer { height: 240rpx; }
+
+.mic {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #7C6F64;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 8rpx 24rpx rgba(124, 111, 100, 0.3);
+}
+.mic-active {
+  background: #D94F4F;
+}
+.mic-active .mic-ring {
+  position: absolute;
+  inset: -16rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(217, 79, 79, 0.35);
+  animation: ripple 1.2s ease-out infinite;
+}
+@keyframes ripple {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.mic-icon { font-size: 60rpx; }
+.mic-hint {
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: #A8A29E;
+}

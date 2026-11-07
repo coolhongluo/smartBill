@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "cat-create": "/components/cat-create/cat-create",
+    "cat-picker": "/components/cat-picker/cat-picker"
+  }
+}

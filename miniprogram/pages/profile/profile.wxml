@@ -1,0 +1,108 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">我的</view>
+    <view class="row"><text>已记笔数</text><text class="val">{{billCount}}</text></view>
+    <view class="row" wx:if="{{openid}}">
+      <text>用户标识</text>
+      <text class="val val-mono">{{openid}}</text>
+    </view>
+    <view class="row"><text>数据存储</text><text class="val">微信云开发（加密传输）</text></view>
+    <view class="row"><text>识别方式</text><text class="val">语音 + 规则 + 大模型</text></view>
+  </view>
+
+  <!-- 个人资料：头像昵称可选填（微信「头像昵称填写能力」，getUserProfile 已废弃） -->
+  <view class="card">
+    <view class="card-title">个人资料</view>
+    <view class="profile-box">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar avatar-empty">点选头像</view>
+      </button>
+      <view class="profile-fields">
+        <input
+          class="nickname-input"
+          type="nickname"
+          placeholder="填写昵称（可选）"
+          value="{{nickname}}"
+          bindinput="onNicknameInput"
+          bindblur="onNicknameBlur"
+        />
+        <view class="diag-hint">资料仅用于家庭账单中区分成员；不填也能正常使用。</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据库诊断：定位「数据没写入」的具体环节 -->
+  <view class="card">
+    <view class="card-title">家庭</view>
+    <view class="row tap" bindtap="onGoFamily">
+      <text>{{familyId ? '我的家庭' : '创建 / 加入家庭'}}</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="diag-hint">
+      和家人共享一个账本：每个人记的账全家都能看到；
+      没有家庭时可在个人账本与家庭账本之间自由切换。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">我的类目</view>
+    <view class="row tap" bindtap="onGoCategoryManage">
+      <text>类目管理</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="diag-hint">
+      独立创建自定义类目（一级到三级均可），与记账互不依赖；
+      类目保存在云端账户，换设备不丢，语音记账自动匹配。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">重复记账</view>
+    <view class="row tap" bindtap="onGoRecurringManage">
+      <text>重复记账规则</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="diag-hint">
+      设置每天 / 工作日 / 每周等自动记账规则，到点自动入账；
+      明细页带「自动」标记的账单即来自这里。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">数据诊断</view>
+    <view class="row tap" bindtap="onDiag">
+      <text>{{diagRunning ? '诊断中…' : '一键诊断数据库'}}</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="diag-hint">
+      记录没保存成功时点这里，会自动检查云环境、用户身份、集合是否存在、
+      有没有写权限，并做一次真实写入再读回。
+    </view>
+
+    <view class="diag-result" wx:if="{{diagResult}}">
+      <view class="diag-verdict {{diagResult.ok ? 'is-ok' : 'is-bad'}}">
+        {{diagResult.ok ? '一切正常' : '发现问题'}}
+      </view>
+      <view class="diag-env" wx:if="{{diagResult.env}}">环境：{{diagResult.env}}</view>
+      <view class="diag-step" wx:for="{{diagResult.checks}}" wx:key="step">
+        <text class="diag-icon">{{item.ok ? '✓' : '✗'}}</text>
+        <view class="diag-step-body">
+          <view class="diag-step-name">{{item.step}}</view>
+          <view class="diag-step-detail">{{item.detail}}</view>
+        </view>
+      </view>
+      <view class="diag-note">{{diagResult.verdict}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row tap" bindtap="onClearCache"><text>清除本地缓存</text><text class="arrow">›</text></view>
+    <view class="row"><text>关于</text><text class="val">随口记 v0.1 · P0 验证版</text></view>
+  </view>
+
+  <view class="privacy">
+    录音仅用于生成记账条目，上传后立即从云存储删除。
+    金额由规则引擎裁定，大模型只负责理解语义、不参与计算。
+  </view>
+</view>

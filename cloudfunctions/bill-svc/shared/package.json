@@ -1,0 +1,7 @@
+{
+  "name": "voice-bill-shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "云函数共享层：规则引擎 / Agent Harness / 类目库 / 工具",
+  "main": "index.js"
+}

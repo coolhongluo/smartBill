@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "timeout": 25,
+  "memorySize": 512,
+  "runtime": "Nodejs18.15",
+  "handler": "index.main",
+  "triggers": [
+    {
+      "name": "dailyRecurring",
+      "type": "timer",
+      "config": "0 30 0 * * * *"
+    }
+  ],
+  "description": "记账主链路云函数 —— 语音入账、补记、自动记账、重复记账。需开启预置并发2 以消除冷启动。triggers 每天 0:30（UTC+8）扫描到期重复规则生成账单（晚于 analysis-svc 的 0:00 分析，当天生成的账单次晚进入分析）；定时触发无用户上下文，账单归属来自规则文档的 userId。⚠ 改本文件后需「云函数增量上传：更新文件」+「上传触发器」两步。"
+}

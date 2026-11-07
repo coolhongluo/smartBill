@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "重复记账",
+  "usingComponents": {
+    "cat-picker": "/components/cat-picker/cat-picker"
+  }
+}

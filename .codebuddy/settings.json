@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CODEBUDDY_PROJECT_DIR/.codebuddy/hooks/wiki-first.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

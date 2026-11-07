@@ -1,0 +1,35 @@
+{
+  "name": "voice-bill",
+  "version": "0.1.0",
+  "description": "家庭语音记账小程序 —— 随口记。说一句话，账就记好了。",
+  "private": true,
+  "scripts": {
+    "test": "node cloudfunctions/shared/rules/__tests__/asr-parse.test.js && node cloudfunctions/shared/rules/__tests__/category-match.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/bill-stats.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/tool-loop.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/saving-rules.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/fallback-reason.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/tracer.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/tool-grounding.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/tool-grounding.test.js && node cloudfunctions/shared/db/__tests__/insight-store.test.js && node cloudfunctions/shared/db/__tests__/daily-insight.test.js && node cloudfunctions/shared/db/__tests__/family-store.test.js && node tools/__tests__/trace-view.test.js && node tools/__tests__/trend-view.test.js && node tools/__tests__/trend-detail-jump.test.js && node tools/__tests__/edit-bill.test.js && node tools/__tests__/money-format.test.js && node tools/__tests__/cat-create-level2.test.js && node tools/__tests__/recurring-schedule.test.js && node tools/__tests__/recurring-rule.test.js && node tools/__tests__/family.test.js && node tools/__tests__/ledger-memory.test.js && node tools/e2e-local.js && node tools/test-persist.js && npm run test:tz-utc",
+    "test:tz-utc": "node -e \"process.env.TZ='UTC';require('./cloudfunctions/shared/db/__tests__/daily-insight.test.js')\"",
+    "test:rules": "node cloudfunctions/shared/rules/__tests__/asr-parse.test.js",
+    "test:category": "node cloudfunctions/shared/rules/__tests__/category-match.test.js",
+    "test:stats": "node cloudfunctions/shared/agent-harness/tools/__tests__/bill-stats.test.js && node cloudfunctions/shared/agent-harness/tools/__tests__/tool-loop.test.js",
+    "test:e2e": "node tools/e2e-local.js",
+    "test:persist": "node tools/test-persist.js",
+    "verify": "node tools/verify-p0.js",
+    "preflight": "node tools/preflight.js",
+    "doctor": "node tools/preflight.js",
+    "check:ui": "node tools/check-frontend.js",
+    "check": "node tools/check-frontend.js && node tools/preflight.js",
+    "verify:api": "node tools/verify-llm-ab.js",
+    "verify:api:repeat": "node tools/verify-llm-ab.js --repeat 3",
+    "prepare:cf": "node tools/prepare-cloudfunctions.js",
+    "predeploy": "node tools/prepare-cloudfunctions.js",
+    "test:store": "node cloudfunctions/shared/db/__tests__/insight-store.test.js",
+    "test:daily": "node cloudfunctions/shared/db/__tests__/daily-insight.test.js",
+    "trace": "node tools/trace-view.js",
+    "trace:demo": "node tools/trace-demo.js",
+    "wiki:build": "node tools/wiki-build/build.js",
+    "wiki:verify": "node tools/wiki-build/verify.js"
+  },
+  "engines": {
+    "node": ">=18.15.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

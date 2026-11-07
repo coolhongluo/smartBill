@@ -1,0 +1,163 @@
+page { background: #FAF8F5; color: #3D3935; }
+.page { min-height: 100vh; padding: 32rpx; box-sizing: border-box; }
+
+.header { text-align: center; padding: 32rpx 0 40rpx; }
+
+/* 账本切换（与首页同款） */
+.ledger-switch { display: flex; justify-content: center; gap: 12rpx; margin: 8rpx 0 0; }
+.ledger-tab {
+  padding: 10rpx 32rpx; font-size: 26rpx; color: #A8A29E;
+  background: #FFFFFF; border: 2rpx solid #EDE8E1; border-radius: 999rpx;
+}
+.ledger-tab.is-on { color: #FFFFFF; background: #7C6F64; border-color: #7C6F64; }
+.month-nav { display: flex; align-items: center; justify-content: center; }
+.nav-btn {
+  font-size: 40rpx; color: #CFC8C0; padding: 0 32rpx;
+}
+/* 已到当前月：下月按钮置灰，视觉上说明翻不动了 */
+.nav-btn.disabled { opacity: 0.3; }
+.month-text { font-size: 28rpx; color: #7C6F64; }
+.total {
+  font-size: 68rpx; font-weight: 600; margin: 16rpx 0 8rpx;
+  font-variant-numeric: tabular-nums;
+}
+.delta { font-size: 24rpx; }
+
+.loading, .empty { text-align: center; padding: 120rpx 0; color: #A8A29E; }
+.empty-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.empty-text { font-size: 30rpx; color: #7C6F64; margin-bottom: 12rpx; }
+.empty-sub { font-size: 24rpx; }
+
+.day-group { margin-bottom: 32rpx; }
+.day-head {
+  display: flex; justify-content: space-between;
+  padding: 16rpx 8rpx; font-size: 24rpx; color: #A8A29E;
+}
+.day-total { font-variant-numeric: tabular-nums; }
+
+.bill-row {
+  display: flex; align-items: center;
+  background: #FFFFFF; padding: 28rpx 24rpx;
+  border-radius: 20rpx; margin-bottom: 12rpx;
+}
+.bill-row:active { background: #F5F2EE; }
+.bill-dot {
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  margin-right: 20rpx; flex-shrink: 0;
+}
+.bill-body { flex: 1; }
+.bill-name { font-size: 30rpx; display: flex; align-items: center; }
+.badge-recall {
+  font-size: 20rpx; color: #B87A2E; background: #FFF4E5;
+  padding: 2rpx 12rpx; border-radius: 8rpx; margin-left: 12rpx;
+}
+/* 「自动」= 重复记账规则定时生成的账单（source='auto'），
+   蓝灰色系与「补记」的琥珀色区分开 */
+.badge-auto {
+  font-size: 20rpx; color: #5B7390; background: #EDF2F8;
+  padding: 2rpx 12rpx; border-radius: 8rpx; margin-left: 12rpx;
+}
+.bill-path { font-size: 22rpx; color: #B8B0A8; margin-top: 4rpx; }
+.bill-amount {
+  font-size: 32rpx; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+/* ── 列表里的备注 / 账户副信息 ── */
+.bill-meta {
+  display: flex; align-items: center;
+  font-size: 21rpx; color: #C4BDB4; margin-top: 6rpx;
+}
+
+/* ══════════ 编辑面板 ══════════ */
+.edit-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+.edit-sheet {
+  width: 100%;
+  max-height: 86vh;
+  background: #FAF8F5;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  /* 面板内容可能超过一屏：允许内部滚动 */
+  overflow-y: auto;
+}
+.edit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.edit-title { font-size: 32rpx; font-weight: 600; }
+.edit-close { font-size: 34rpx; color: #CFC8C0; padding: 8rpx 16rpx; }
+
+.edit-field { margin-bottom: 28rpx; }
+.edit-label {
+  display: block;
+  font-size: 24rpx; color: #A8A29E;
+  margin-bottom: 12rpx;
+}
+
+/* 金额：数字是大头，符号与输入框同一行 */
+.edit-amount-box {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+}
+.edit-yuan { font-size: 36rpx; color: #A8A29E; margin-right: 12rpx; }
+.edit-amount {
+  flex: 1;
+  font-size: 44rpx;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 类目 / 日期：可点击的选择框 */
+.edit-pick-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+}
+.edit-pick-text { font-size: 28rpx; color: #3D3935; }
+.edit-pick-arrow { font-size: 32rpx; color: #CFC8C0; }
+
+.edit-input {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
+}
+.edit-ph { color: #CFC8C0; }
+
+/* 底部操作：删除次要、保存主要 */
+.edit-actions { display: flex; margin-top: 40rpx; }
+.edit-btn {
+  flex: 1;
+  margin: 0 12rpx;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+  padding: 20rpx 0;
+}
+.edit-btn::after { border: none; }
+.edit-btn-ghost {
+  color: #A32D2D;
+  background: transparent;
+  border: 1rpx solid #E8C4C4;
+}
+.edit-btn-primary {
+  color: #FFFFFF;
+  background: #7C6F64;
+  border: none;
+}
+.edit-btn-primary:active { background: #625749; }

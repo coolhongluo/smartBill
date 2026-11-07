@@ -1,0 +1,79 @@
+<view class="page">
+  <!-- 已加入家庭 -->
+  <block wx:if="{{inFamily}}">
+    <view class="card">
+      <view class="card-title">我的家庭</view>
+      <view class="family-name">{{family.name}}</view>
+      <view class="row">
+        <text>成员</text>
+        <text class="val">{{family.memberCount}} / 8 人</text>
+      </view>
+      <view class="row" wx:if="{{family.inviteCode}}">
+        <text>邀请码</text>
+        <text class="val val-mono">{{family.inviteCode}}</text>
+      </view>
+      <view class="diag-hint">{{expireText}}</view>
+      <view class="btn-row">
+        <button class="btn" size="mini" bindtap="onCopyCode">复制邀请码</button>
+        <button class="btn" size="mini" wx:if="{{family.isOwner}}" bindtap="onRegenCode">重新生成</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">家庭成员</view>
+      <view class="member" wx:for="{{members}}" wx:key="index">
+        <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="member-avatar member-avatar-empty">家</view>
+        <view class="member-info">
+          <view class="member-name">{{item.nickname || '家人'}}</view>
+          <view class="member-badges">
+            <text wx:if="{{item.isMe}}" class="badge badge-me">我</text>
+            <text wx:if="{{item.isOwner}}" class="badge badge-owner">创建者</text>
+          </view>
+        </view>
+      </view>
+      <view class="diag-hint">
+        家庭成员共用家庭账本：每个人都可以记一笔，全家都能看到；
+        资料可在「我的」页填写，方便家人认出彼此。
+      </view>
+    </view>
+
+    <view class="card">
+      <button wx:if="{{family.isOwner}}" class="btn btn-danger" bindtap="onDissolveFamily">解散家庭</button>
+      <button wx:else class="btn btn-danger" bindtap="onLeaveFamily">退出家庭</button>
+    </view>
+  </block>
+
+  <!-- 未加入家庭 -->
+  <block wx:else>
+    <view class="card">
+      <view class="card-title">创建家庭</view>
+      <input
+        class="input"
+        placeholder="家庭名称，如：我们的家"
+        value="{{createName}}"
+        bindinput="onCreateNameInput"
+        maxlength="20"
+      />
+      <button class="btn btn-primary" bindtap="onCreateFamily" disabled="{{busy}}">创建并加入</button>
+      <view class="diag-hint">创建后生成邀请码，家人凭码加入；家庭账本全员共享。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">加入家庭</view>
+      <input
+        class="input"
+        placeholder="输入 8 位邀请码"
+        value="{{joinCode}}"
+        bindinput="onJoinCodeInput"
+        maxlength="8"
+      />
+      <button class="btn btn-primary" bindtap="onJoinFamily" disabled="{{busy}}">加入</button>
+      <view class="diag-hint">邀请码有效期为 72 小时，过期请联系家庭创建者重新生成。</view>
+    </view>
+  </block>
+
+  <view class="privacy">
+    家庭账单存储于微信云开发，仅家庭成员可见。
+  </view>
+</view>

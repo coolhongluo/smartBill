@@ -1,0 +1,66 @@
+<view class="page">
+
+  <!-- 概览 -->
+  <view class="card">
+    <view class="card-title">我的自定义类目</view>
+    <view class="stat-row" wx:if="{{!loading}}">
+      <view class="stat">
+        <view class="stat-num">{{customCount}}</view>
+        <view class="stat-label">全部</view>
+      </view>
+      <view class="stat">
+        <view class="stat-num">{{customTopCount}}</view>
+        <view class="stat-label">自建大类</view>
+      </view>
+      <view class="stat">
+        <view class="stat-num">{{groups.length}}</view>
+        <view class="stat-label">归属分组</view>
+      </view>
+    </view>
+    <view class="persist-note">
+      类目保存在你的云端账户里（随微信账号走），换设备、重装小程序都不会丢；
+      语音记账会自动匹配你建过的类目。
+    </view>
+    <button class="btn-add" bindtap="onOpenCreate">＋ 新建类目</button>
+  </view>
+
+  <!-- 列表 -->
+  <view class="card" wx:if="{{!loading}}">
+    <view class="card-title">类目清单</view>
+
+    <view class="group" wx:for="{{groups}}" wx:key="title" wx:for-item="g">
+      <view class="group-head">
+        <view class="group-dot" style="background:{{g.color}}"></view>
+        <text class="group-title">{{g.title}}</text>
+        <text class="group-count">{{g.items.length}} 个</text>
+      </view>
+      <view class="cat-row" wx:for="{{g.items}}" wx:key="path">
+        <view class="cat-row-dot" style="background:{{item.color}}"></view>
+        <view class="cat-row-body">
+          <view class="cat-row-name">{{item.name}}<text class="cat-row-lv">{{item.lv}}</text></view>
+          <view class="cat-row-path">{{item.path}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!groups.length}}">
+      还没有自定义类目。
+      记账时搜不到合适的类目，或想按自己家的习惯建一套分类，
+      点上方「新建类目」即可，支持从一级大类建到三级。
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+
+  <!-- 创建表单（与记账页共用同一个组件） -->
+  <cat-create
+    visible="{{createVisible}}"
+    tree="{{tree}}"
+    init-name="{{createInit.name}}"
+    init-level="{{createInit.level}}"
+    init-parent1="{{createInit.parent1}}"
+    init-parent2="{{createInit.parent2}}"
+    bind:created="onCatCreated"
+    bind:cancel="onCancelCreate"
+  />
+</view>

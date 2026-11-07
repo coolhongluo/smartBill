@@ -1,0 +1,9 @@
+{
+  "name": "bill-svc",
+  "version": "0.1.0",
+  "description": "记账主链路云函数（record / recall / amend）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^3.0.1"
+  }
+}

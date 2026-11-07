@@ -1,0 +1,11 @@
+/* 全局样式：只放跨页面复用的，其余留在各自 wxss */
+page {
+  background-color: #FAF8F5;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+/* 数字统一等宽，避免金额变化时宽度跳动导致布局抖动 */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* 通用安全区适配 */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }

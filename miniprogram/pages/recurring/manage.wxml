@@ -1,0 +1,179 @@
+<view class="page">
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+
+  <view class="empty" wx:elif="{{!rules.length}}">
+    <view class="empty-icon">🔁</view>
+    <view class="empty-text">还没有重复记账规则</view>
+    <view class="empty-sub">设置一条规则，到点自动帮你记一笔</view>
+  </view>
+
+  <block wx:else>
+    <view class="rule-card" wx:for="{{rules}}" wx:key="_id">
+      <view class="rule-head">
+        <view class="rule-title">
+          <text class="rule-amount">{{item.amountText}}</text>
+          <text class="rule-cat">{{item.categoryName}}</text>
+          <text class="rule-ledger {{item.ledger === 'family' ? 'is-family' : ''}}">{{item.ledgerText}}</text>
+          <text class="rule-status {{item.paused ? 'is-paused' : ''}}">{{item.paused ? '已暂停' : '进行中'}}</text>
+        </view>
+        <view class="rule-repeat">{{item.repeatText}}</view>
+        <view class="rule-next" wx:if="{{item.familyInvalid}}">家庭已失效：删除后重建为个人规则，或重新加入该家庭后恢复</view>
+        <view class="rule-next" wx:elif="{{item.paused}}">恢复后从明天起继续，暂停期间不补记</view>
+        <view class="rule-next" wx:else>下次生成：{{item.nextText}}</view>
+        <view class="rule-note" wx:if="{{item.note}}">备注：{{item.note}}</view>
+      </view>
+      <view class="rule-actions">
+        <button class="rule-btn" bindtap="onEdit" data-id="{{item._id}}">编辑</button>
+        <button class="rule-btn" bindtap="onTogglePause" data-id="{{item._id}}" data-paused="{{item.paused}}">
+          {{item.paused ? '恢复' : '暂停'}}
+        </button>
+        <button class="rule-btn rule-btn-danger" bindtap="onDelete" data-id="{{item._id}}">删除</button>
+      </view>
+    </view>
+  </block>
+
+  <button class="add-btn" wx:if="{{!loading}}" bindtap="onCreate">+ 新建重复规则</button>
+
+  <!-- ══════════ 新建/编辑面板（结构与明细页编辑面板一致） ══════════ -->
+  <view class="edit-mask" wx:if="{{formOpen}}" bindtap="closeForm">
+    <view class="edit-sheet" catchtap="noop" catchtouchmove="noop">
+
+      <view class="edit-head">
+        <text class="edit-title">{{formEdit ? '编辑规则' : '新建重复规则'}}</text>
+        <text class="edit-close" bindtap="closeForm">✕</text>
+      </view>
+
+      <!-- 金额 -->
+      <view class="edit-field">
+        <text class="edit-label">金额</text>
+        <view class="edit-amount-box">
+          <text class="edit-yuan">¥</text>
+          <input
+            class="edit-amount"
+            type="digit"
+            value="{{formAmount}}"
+            bindinput="onAmountInput"
+            placeholder="0.00"
+            placeholder-class="edit-ph"
+          />
+        </view>
+      </view>
+
+      <!-- 类目 -->
+      <view class="edit-field">
+        <text class="edit-label">类目</text>
+        <view class="edit-pick-box" bindtap="openCatPicker">
+          <text class="{{formCategoryLabel ? 'edit-pick-text' : 'edit-pick-text edit-ph'}}">
+            {{formCategoryLabel || '点击选择类目'}}
+          </text>
+          <text class="edit-pick-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 账本归属：新建可选（未加入家庭时选家庭会指路）；编辑只展示不可改 -->
+      <view class="edit-field" wx:if="{{!formEdit}}">
+        <text class="edit-label">记入账本</text>
+        <picker mode="selector" range="{{ledgerOptions}}" value="{{formLedgerIndex}}" bindchange="onLedgerChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{ledgerOptions[formLedgerIndex]}}{{!hasFamily && formLedgerIndex === 0 ? '（未加入家庭）' : ''}}</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="edit-field" wx:else>
+        <text class="edit-label">记入账本</text>
+        <view class="edit-pick-box">
+          <text class="edit-pick-text">{{ledgerOptions[formLedgerIndex]}}（不可修改，换账本请删除重建）</text>
+        </view>
+      </view>
+
+      <!-- 重复方式 -->
+      <view class="edit-field">
+        <text class="edit-label">重复方式</text>
+        <picker mode="selector" range="{{typeOptions}}" value="{{formTypeIndex}}" bindchange="onTypeChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{typeOptions[formTypeIndex]}}</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 每周：星期几 -->
+      <view class="edit-field" wx:if="{{formType === 'weekly'}}">
+        <text class="edit-label">星期</text>
+        <picker mode="selector" range="{{weekOptions}}" value="{{formDayOfWeek}}" bindchange="onDayOfWeekChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{weekOptions[formDayOfWeek]}}</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 每月 / 每季度：几号 -->
+      <view class="edit-field" wx:if="{{formType === 'monthly' || formType === 'quarterly'}}">
+        <text class="edit-label">几号</text>
+        <picker mode="selector" range="{{dayOptions}}" value="{{formDayOfMonth - 1}}" bindchange="onDayOfMonthChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{formDayOfMonth}} 日</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 每年：几月 + 几号 -->
+      <view class="edit-field" wx:if="{{formType === 'yearly'}}">
+        <text class="edit-label">几月</text>
+        <picker mode="selector" range="{{monthOptions}}" value="{{formMonth - 1}}" bindchange="onMonthChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{formMonth}} 月</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="edit-field" wx:if="{{formType === 'yearly'}}">
+        <text class="edit-label">几号</text>
+        <picker mode="selector" range="{{dayOptions}}" value="{{formDayOfMonth - 1}}" bindchange="onDayOfMonthChange">
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{formDayOfMonth}} 日</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 口径提示：随重复方式变化 -->
+      <view class="edit-hint">{{typeHint}}</view>
+
+      <!-- 备注 -->
+      <view class="edit-field">
+        <text class="edit-label">备注</text>
+        <input
+          class="edit-input"
+          value="{{formNote}}"
+          bindinput="onNoteInput"
+          placeholder="这笔钱花在什么上（可留空）"
+          placeholder-class="edit-ph"
+          maxlength="200"
+        />
+      </view>
+
+      <view class="edit-actions">
+        <button class="edit-btn edit-btn-ghost" bindtap="closeForm">取消</button>
+        <button
+          class="edit-btn edit-btn-primary"
+          bindtap="saveForm"
+          loading="{{formSaving}}"
+          disabled="{{formSaving}}"
+        >{{formSaving ? '保存中' : '保存'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 类目选择器（与明细页共用 components/cat-picker） -->
+  <cat-picker
+    visible="{{catPickerVisible}}"
+    initial-id="{{formCategoryId}}"
+    bind:select="onCatPicked"
+    bind:cancel="onCatPickerCancel"
+  />
+
+</view>

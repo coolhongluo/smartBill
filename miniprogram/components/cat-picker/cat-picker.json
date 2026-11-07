@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cat-create": "/components/cat-create/cat-create"
+  }
+}

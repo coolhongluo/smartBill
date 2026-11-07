@@ -1,0 +1,15 @@
+{
+  "permissions": { "openapi": [] },
+  "timeout": 40,
+  "memorySize": 512,
+  "runtime": "Nodejs18.15",
+  "handler": "index.main",
+  "triggers": [
+    {
+      "name": "dailyInsight",
+      "type": "timer",
+      "config": "0 0 0 * * * *"
+    }
+  ],
+  "description": "统计分析云函数：月度概览、明细流水、分类占比、消费习惯分析。timeout 40 —— 分析走 LLM + 最多 4 轮工具往返，LLM 总预算 20 秒（每轮 5 秒）+ 数据库查询与冷启动余量。triggers 每天 0 点批量生成分析结果；定时触发无用户上下文，故由 dailyInsight action 自带用户清单。"
+}

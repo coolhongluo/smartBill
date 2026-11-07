@@ -1,0 +1,10 @@
+{
+  "name": "asr-svc",
+  "version": "0.1.0",
+  "description": "语音识别云函数：腾讯云实时语音识别（WebSocket 流式）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^3.0.1",
+    "ws": "^8.18.0"
+  }
+}

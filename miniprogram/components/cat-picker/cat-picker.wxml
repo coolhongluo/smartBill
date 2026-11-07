@@ -1,0 +1,134 @@
+<view class="cat-mask" wx:if="{{visible}}" bindtap="closePicker">
+  <!-- catchtouchmove：防止拖动列表时带动底层页面一起滚。
+       面板内的 scroll-view 是原生滚动，不受它影响 -->
+  <view class="cat-sheet" catchtap="noop" catchtouchmove="noop">
+
+    <view class="cat-head">
+      <text class="cat-title">选择类目</text>
+      <text class="cat-close" bindtap="closePicker">✕</text>
+    </view>
+
+    <!-- 搜索 -->
+    <view class="cat-search">
+      <input
+        class="cat-search-input"
+        value="{{catSearchKw}}"
+        bindinput="onCatSearch"
+        placeholder="搜类目名，如 买菜 / 打车"
+        placeholder-class="mp-ph"
+      />
+    </view>
+
+    <!-- 搜索结果 -->
+    <scroll-view class="cat-scroll" scroll-y wx:if="{{catSearchKw}}">
+      <view
+        class="cat-item"
+        wx:for="{{catSearchResult}}"
+        wx:key="id"
+        data-i="{{index}}"
+        bindtap="onPickSearchResult"
+      >
+        <view class="cand-dot" style="background:{{item.color}}"></view>
+        <view class="cat-item-body">
+          <view class="cat-item-name">{{item.name}}<text class="cat-tag" wx:if="{{item.custom}}">自定义</text></view>
+          <view class="cat-item-path">{{item.path}}</view>
+        </view>
+      </view>
+      <view class="cat-empty" wx:if="{{!catSearchResult.length && !catLoading}}">
+        <view>没有匹配的类目</view>
+        <!-- 这就是「不匹配 → 自主新增」的主入口：
+             用户搜不到时，下一步动作只能是「建一个」，按钮直接给出 -->
+        <view
+          class="cat-create-btn"
+          wx:if="{{catSearchKw}}"
+          catchtap="onCreateFromSearch"
+        >＋ 新增「{{catSearchKw}}」</view>
+      </view>
+    </scroll-view>
+
+    <!-- 三级联动 -->
+    <view class="cat-body" wx:else>
+      <view class="cat-loading" wx:if="{{catLoading}}">类目加载中…</view>
+
+      <block wx:elif="{{catLevel1.length}}">
+        <scroll-view class="cat-lv1" scroll-y>
+          <view
+            class="cat-lv1-item {{curL1 === item._i ? 'is-on' : ''}}"
+            wx:for="{{catLevel1}}"
+            wx:key="id"
+            data-i="{{item._i}}"
+            bindtap="onPickL1"
+          >
+            <view class="cat-dot" style="background:{{item.color}}"></view>
+            <text>{{item.name}}</text>
+            <text class="cat-tag" wx:if="{{item.custom}}">自定义</text>
+          </view>
+        </scroll-view>
+
+        <view class="cat-lv-right">
+          <!-- 二级：固定高度 + 独立滚动 -->
+          <scroll-view
+            class="cat-lv2"
+            scroll-y
+            scroll-top="{{catL2ScrollTop}}"
+            wx:if="{{curL1 >= 0}}"
+          >
+            <view class="cat-lv2-sec">二级分类</view>
+            <view
+              class="cat-lv2-item {{curL2 === item._i ? 'is-on' : ''}}"
+              wx:for="{{catLevel2}}"
+              wx:key="id"
+              data-j="{{item._i}}"
+              bindtap="onPickL2"
+            >
+              {{item.name}}<text class="cat-tag" wx:if="{{item.custom}}">自定义</text>
+            </view>
+          </scroll-view>
+
+          <!-- 三级：选中二级后出现，自带标题，避免和二级视觉混成一片 -->
+          <scroll-view
+            class="cat-lv3"
+            scroll-y
+            scroll-top="{{catL3ScrollTop}}"
+            wx:if="{{catLevel3.length}}"
+          >
+            <view class="cat-lv3-sec">选一个具体项</view>
+            <view
+              class="cat-lv3-item"
+              wx:for="{{catLevel3}}"
+              wx:key="id"
+              data-k="{{item._i}}"
+              bindtap="onPickL3"
+            >
+              {{item.name}}<text class="cat-tag" wx:if="{{item.custom}}">自定义</text>
+            </view>
+          </scroll-view>
+
+          <view class="cat-hint-col" wx:if="{{curL1 < 0}}">
+            先在左侧选择一级分类
+          </view>
+          <view class="cat-hint-col" wx:elif="{{!catLevel3.length}}">
+            请在上方选择二级分类
+          </view>
+        </view>
+      </block>
+
+      <view class="cat-empty" wx:else>类目加载失败，请关闭后重试</view>
+    </view>
+
+    <!-- 常驻入口：不搜索也能建（很多用户不会先搜，直接翻树翻不到就放弃了） -->
+    <view class="cat-footer" bindtap="onOpenCreateCategory">＋ 新增自定义类目</view>
+  </view>
+</view>
+
+<!-- 创建表单组件：全屏弹窗，创建成功后自动选用该类目 -->
+<cat-create
+  visible="{{catCreateVisible}}"
+  tree="{{catTree}}"
+  init-name="{{catCreateInit.name}}"
+  init-level="{{catCreateInit.level}}"
+  init-parent1="{{catCreateInit.parent1}}"
+  init-parent2="{{catCreateInit.parent2}}"
+  bind:created="onCatCreated"
+  bind:cancel="onCancelCreateCategory"
+/>

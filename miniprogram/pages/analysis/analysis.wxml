@@ -1,0 +1,196 @@
+<view class="page">
+  <!-- 账本切换：家庭 / 个人（与首页同一个 globalData.ledger）。
+       放在块外：加载中 / 空态 / 有结果三种状态下都能切 -->
+  <view class="ledger-switch">
+    <view
+      class="ledger-tab {{ledger === 'family' ? 'is-on' : ''}}"
+      data-ledger="family"
+      bindtap="onSwitchLedger"
+    >家庭账本</view>
+    <view
+      class="ledger-tab {{ledger === 'personal' ? 'is-on' : ''}}"
+      data-ledger="personal"
+      bindtap="onSwitchLedger"
+    >个人账本</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">读取中…</view>
+
+  <!-- 失败态：必须与「还没分析」严格区分 -->
+  <view class="empty" wx:elif="{{errorMsg}}">
+    <view class="empty-icon">!</view>
+    <view class="empty-text">读取失败</view>
+    <view class="empty-sub">{{errorMsg}}</view>
+    <view class="empty-actions">
+      <button class="empty-btn" bindtap="onRefresh">重新分析</button>
+    </view>
+  </view>
+
+  <!-- 从没分析过：给出明确引导，不要空白页 -->
+  <view class="empty" wx:elif="{{!hasResult}}">
+    <view class="empty-icon">📊</view>
+    <view class="empty-text">还没有分析结果</view>
+    <view class="empty-sub">每天凌晨会自动生成，也可以现在手动分析一次</view>
+    <view class="empty-actions">
+      <button class="empty-btn" bindtap="onRefresh">立即分析</button>
+      <button class="empty-btn empty-btn-ghost" bindtap="goRecord">去记一笔</button>
+    </view>
+  </view>
+
+  <block wx:else>
+    <!-- 顶部：月份 + 更新时间 + 重新分析入口 -->
+    <view class="toolbar">
+      <view class="toolbar-left">
+        <text class="toolbar-month">{{month}}</text>
+        <text class="toolbar-time" wx:if="{{generatedAt}}">更新于 {{generatedAt}}</text>
+        <text class="toolbar-stale" wx:elif="{{isStale}}">本月尚未生成</text>
+      </view>
+      <button
+        class="refresh-btn"
+        bindtap="onRefresh"
+        loading="{{refreshing}}"
+        disabled="{{refreshing}}"
+      >
+        {{refreshing ? '分析中' : '重新分析'}}
+      </button>
+    </view>
+
+    <!-- 结论已过期：账目在结论生成后被改过。
+         必须明确告知，而不是让用户把旧结论当成最新的看 ——
+         基于旧金额的占比与节省建议，比不显示结论更糟。 -->
+    <view class="outdated-tip" wx:if="{{isOutdated}}">
+      <text class="outdated-icon">!</text>
+      <text class="outdated-text">{{outdatedText}}</text>
+    </view>
+
+    <!-- 本月概览 -->
+    <view class="card">
+      <view class="total-row">
+        <text class="total-amount">¥{{total}}</text>
+        <text class="total-meta">{{billCount}} 笔</text>
+      </view>
+      <view class="delta" wx:if="{{deltaText}}" dir="{{deltaDirection}}">{{deltaText}}</view>
+    </view>
+
+    <!-- 消费习惯分析：核心内容 -->
+    <view class="card" wx:if="{{insights.length}}">
+      <view class="card-title">
+        <text>消费习惯分析</text>
+        <text class="card-note" wx:if="{{fallbackNote}}">{{fallbackNote}}</text>
+      </view>
+      <!-- insights 是纯字符串数组：必须用 *this 作 key、取 {{item}} 本身 -->
+      <view class="insight" wx:for="{{insights}}" wx:key="*this">{{item}}</view>
+
+      <!-- 降级原因与处理建议。
+           guard 类是「护栏正常工作」（如拦下了建议学费的建议），
+           不是故障，所以用中性样式而非错误样式——
+           否则用户会以为系统坏了。 -->
+      <view class="fallback-tip" wx:if="{{fallbackHint}}" level="{{fallbackLevel}}">
+        {{fallbackHint}}
+      </view>
+    </view>
+
+    <!-- 诊断入口：一次性说清「为什么是规则版」。
+         放在降级提示下面，因为只有遇到降级的人才需要它。 -->
+    <view class="diag-entry" wx:if="{{isFallback}}">
+      <button class="diag-btn" bindtap="onDiag" disabled="{{diagRunning}}" loading="{{diagRunning}}">
+        {{diagRunning ? '诊断中…' : '为什么是规则版？点这里诊断'}}
+      </button>
+    </view>
+
+    <!-- 诊断结果面板 -->
+    <view class="card diag-panel" wx:if="{{diagResult}}">
+      <view class="card-title">
+        <text>诊断结果</text>
+        <text class="card-note" wx:if="{{diagResult.versionMismatch}}">
+          代码版本不一致
+        </text>
+      </view>
+
+      <!-- 版本不一致是最容易被忽略的原因，单独突出 -->
+      <view class="diag-warn" wx:if="{{diagResult.versionMismatch}}">
+        云端跑的是 {{diagResult.codeVersion}}，本地期望 {{diagResult.expectedVersion}}。
+        云端代码没有更新——请右键 cloudfunctions/analysis-svc →「上传并部署：云端安装依赖」。
+      </view>
+
+      <view class="diag-line" wx:for="{{diagResult.lines}}" wx:key="*this">{{item}}</view>
+
+      <view class="diag-advice" wx:if="{{diagResult.advice.length}}">
+        <view class="diag-advice-title">建议操作</view>
+        <view class="diag-advice-item" wx:for="{{diagResult.advice}}" wx:key="*this">
+          · {{item}}
+        </view>
+      </view>
+
+      <button class="diag-close" bindtap="closeDiag">关闭</button>
+    </view>
+
+    <!-- 可以这样省 -->
+    <!-- ⚠️ 卡片必须始终显示：没有建议时整块消失，用户会以为这个功能没做。
+         空卡片与「没有建议」是完全不同的两件事 -->
+    <view class="card">
+      <view class="card-title">可以这样省</view>
+      <view class="saving" wx:for="{{savings}}" wx:key="title">
+        <view class="saving-head">
+          <text class="saving-title">{{item.title}}</text>
+          <!-- v3：纯定性建议 amount 为 null，不硬造数字，此行整个隐藏 -->
+        <text class="saving-amount" wx:if="{{item.amount}}">约省 {{item.amount}} 元</text>
+        </view>
+        <view class="saving-action">{{item.action}}</view>
+        <view class="saving-trigger">{{item.trigger}}</view>
+        <!-- B 方案：无备注的类目只基于类目与金额推断，必须让用户知道 -->
+        <view class="saving-reason" wx:if="{{item.reason}}">{{item.reason}}</view>
+        <view class="saving-lowtip" wx:if="{{item.confidence === 'low'}}">
+          仅供参考——这笔消费没有填备注，建议基于类目推断
+        </view>
+      </view>
+
+      <!-- 没有建议时说明原因，而不是让卡片空白 -->
+      <view class="saving-empty" wx:if="{{!savings.length}}">
+        <text class="saving-empty-text">{{savingsEmptyText}}</text>
+        <text class="saving-empty-hint" wx:if="{{savingsEmptyHint}}">{{savingsEmptyHint}}</text>
+        <!-- AI 没跑成时给重试入口；「AI 看过但没建议」不给——重试无意义 -->
+        <button class="saving-retry-btn" wx:if="{{savingsRetry}}" bindtap="onRefresh"
+                disabled="{{refreshing}}" loading="{{refreshing}}">
+          {{refreshing ? '分析中…' : '重试 AI 分析'}}
+        </button>
+      </view>
+    </view>
+
+    <!-- 分类占比 -->
+    <view class="card">
+      <view class="card-title">本月分类占比</view>
+      <view class="pie-list">
+        <view class="pie-row" wx:for="{{pie}}" wx:key="name">
+          <view class="pie-dot" style="background:{{item.color}}"></view>
+          <text class="pie-name">{{item.name}}</text>
+          <view class="pie-bar">
+            <view class="pie-fill" style="background:{{item.color}};width:{{item.percent}}%"></view>
+          </view>
+          <text class="pie-value">{{item.percent}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 近月趋势 -->
+    <view class="card" wx:if="{{trend.length}}">
+      <view class="card-title">近半年趋势</view>
+      <view class="trend">
+        <view
+          class="trend-col"
+          wx:for="{{trend}}"
+          wx:key="month"
+          data-month="{{item.month}}"
+          bindtap="onTrendTap"
+        >
+          <text class="trend-val">{{item.totalYuan}}</text>
+          <view class="trend-bar-wrap">
+            <view class="trend-bar" style="height:{{item.height}}%"></view>
+          </view>
+          <text class="trend-month">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="trend-tip">单位：元 · 点击柱子查看该月明细</view>
+    </view>
+  </block>
+</view>

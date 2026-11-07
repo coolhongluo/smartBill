@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/analysis/analysis",
+    "pages/profile/profile",
+    "pages/category/manage",
+    "pages/recurring/manage",
+    "pages/family/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FAF8F5",
+    "navigationBarTitleText": "随口记",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FAF8F5"
+  },
+  "tabBar": {
+    "color": "#A8A29E",
+    "selectedColor": "#7C6F64",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "记账" },
+      { "pagePath": "pages/detail/detail", "text": "明细" },
+      { "pagePath": "pages/analysis/analysis", "text": "分析" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "permission": {
+    "scope.record": {
+      "desc": "需要录音权限，用于语音记账"
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

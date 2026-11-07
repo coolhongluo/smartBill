@@ -1,0 +1,96 @@
+<!-- 全屏弹窗：记账页叠在选择器上、管理页独立打开，同一形态 -->
+<view class="cc-mask" wx:if="{{visible}}" bindtap="onCancel">
+  <view class="cc-card {{level === 1 ? '' : 'is-pick'}}" catchtap="noop" catchtouchmove="noop">
+    <view class="cc-title">新增自定义类目</view>
+
+    <!-- 层级分段：支出分类最多三层，在这里选建哪一层 -->
+    <view class="cc-seg">
+      <view
+        class="cc-seg-item {{level === 1 ? 'is-on' : ''}}"
+        data-level="{{1}}"
+        bindtap="onSwitchLevel"
+      >一级大类</view>
+      <view
+        class="cc-seg-item {{level === 2 ? 'is-on' : ''}}"
+        data-level="{{2}}"
+        bindtap="onSwitchLevel"
+      >二级</view>
+      <view
+        class="cc-seg-item {{level === 3 ? 'is-on' : ''}}"
+        data-level="{{3}}"
+        bindtap="onSwitchLevel"
+      >三级</view>
+    </view>
+
+    <input
+      class="cc-input"
+      value="{{name}}"
+      bindinput="onNameInput"
+      placeholder="类目名，如：宠物 / 宠物医疗 / 狗狗美容"
+      placeholder-class="cc-ph"
+      maxlength="12"
+    />
+
+    <!-- 一级：无父类，给一句解释代替空区块 -->
+    <block wx:if="{{level === 1}}">
+      <view class="cc-label">
+        一级大类不需要上级，创建后会排在现有大类最后（统计饼图单独成一块）
+      </view>
+    </block>
+
+    <!-- 二级 / 三级：需要选父类 -->
+    <block wx:else>
+      <view class="cc-label">上级大类</view>
+      <!-- 一级条目多（12 个预置 + 自建），套 scroll-view 独立滚动：
+           否则它会把下面的二级候选区挤没 -->
+      <scroll-view class="cc-l1-scroll" scroll-y>
+        <view class="cc-chips">
+          <view
+            wx:for="{{tree}}"
+            wx:key="id"
+            class="cc-chip {{parent1Id === item.id ? 'is-on' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="onPickParent1"
+          >
+            <view class="cc-dot" style="background:{{item.color}}"></view>
+            <text>{{item.name}}</text>
+            <text class="cc-chip-tag" wx:if="{{item.custom}}">自定义</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 三级：选完大类还要选其下的二级 -->
+      <block wx:if="{{level === 3}}">
+        <view class="cc-label">再选一个二级</view>
+        <block wx:if="{{parent1Id}}">
+          <scroll-view class="cc-l2-scroll" scroll-y wx:if="{{l2Options.length}}">
+            <view class="cc-chips">
+              <view
+                wx:for="{{l2Options}}"
+                wx:key="id"
+                class="cc-chip {{parent2Id === item.id ? 'is-on' : ''}}"
+                data-id="{{item.id}}"
+                bindtap="onPickParent2"
+              >
+                <view class="cc-dot" style="background:{{item.color}}"></view>
+                <text>{{item.name}}</text>
+                <text class="cc-chip-tag" wx:if="{{item.custom}}">自定义</text>
+              </view>
+            </view>
+          </scroll-view>
+          <!-- 这个大类下没有二级：说清楚原因，别让二级区空着像加载失败 -->
+          <view class="cc-hint" wx:if="{{!l2Options.length}}">
+            该大类下还没有二级，先建一个二级才能往里加三级
+          </view>
+        </block>
+        <!-- 还没选大类：说清楚下一步 -->
+        <view class="cc-hint" wx:if="{{!parent1Id}}">先选一个大类，再选它下面的二级</view>
+      </block>
+    </block>
+
+    <view class="cc-actions">
+      <button class="cc-btn-cancel" catchtap="onCancel">取消</button>
+      <button class="cc-btn-ok" disabled="{{submitting}}" bindtap="onSubmit">创建</button>
+    </view>
+  </view>
+</view>

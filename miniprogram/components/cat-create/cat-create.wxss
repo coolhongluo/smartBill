@@ -1,0 +1,139 @@
+/* 新增自定义类目弹窗组件 —— 记账页与类目管理页共用
+   类名统一用 cc- 前缀，组件样式隔离，不与页面样式互相渗透 */
+.cc-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cc-card {
+  width: 86%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #FAF8F5;
+  border-radius: 28rpx;
+  padding: 40rpx 36rpx calc(36rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.cc-title { font-size: 32rpx; font-weight: 600; margin-bottom: 24rpx; }
+
+/* 选父类时（level 2/3）卡片必须有**确定高度**。
+   原来只有 max-height: 80vh —— 容器高度不确定时，flex 的分配没有基准，
+   一级 chips 一多，二级候选区会被压到 0 高度（实测 17 个一级时 = 0px），
+   结果就是「三级分类选不了二级」。 */
+.cc-card.is-pick { height: 80vh; }
+
+/* 层级分段：三个等宽选项 */
+.cc-seg {
+  display: flex;
+  margin-bottom: 24rpx;
+  background: #F2EFEA;
+  border-radius: 999rpx;
+  padding: 6rpx;
+}
+.cc-seg-item {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  font-size: 26rpx;
+  color: #7C6F64;
+  border-radius: 999rpx;
+}
+.cc-seg-item.is-on {
+  background: #FFFFFF;
+  color: #3D3935;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(61, 57, 53, 0.08);
+}
+
+.cc-input {
+  padding: 22rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+.cc-ph { color: #C4BDB4; }
+.cc-label {
+  margin: 24rpx 0 16rpx;
+  font-size: 24rpx;
+  color: #A8A29E;
+}
+
+/* 父类 chips（一级）：条目多，限高 + 独立滚动。
+   不限高的话它会吃掉整张卡片，二级候选区就没地方了。 */
+.cc-l1-scroll {
+  flex: 0 0 auto;
+  max-height: 240rpx;
+  min-height: 0;
+}
+
+/* 二级候选区：**必须留出高度**，否则一级 chips 一多就被挤没。
+   min-height 是硬下限，保证「至少能看见一档二级」，剩下的靠滚动。 */
+.cc-l2-scroll {
+  flex: 1 1 auto;
+  min-height: 140rpx;
+  max-height: 320rpx;
+}
+
+/* 三级模式但还没选大类时的提示 */
+.cc-hint {
+  font-size: 24rpx;
+  color: #B8B0A8;
+  padding: 8rpx 0 16rpx;
+}
+
+.cc-chips { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.cc-chip {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 26rpx;
+  background: #FFFFFF;
+  border: 2rpx solid transparent;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: #7C6F64;
+}
+.cc-chip.is-on {
+  border-color: #3D3935;
+  color: #3D3935;
+  font-weight: 600;
+}
+.cc-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+.cc-chip-tag {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+  color: #A8A29E;
+}
+
+.cc-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+.cc-btn-cancel, .cc-btn-ok {
+  flex: 1;
+  margin: 0;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  line-height: 80rpx;
+  padding: 0;
+}
+.cc-btn-cancel {
+  background: #F2EFEA;
+  color: #7C6F64;
+}
+.cc-btn-ok {
+  background: #3D3935;
+  color: #FFFFFF;
+}
+.cc-btn-ok[disabled] { opacity: 0.6; }

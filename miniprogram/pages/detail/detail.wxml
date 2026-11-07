@@ -1,0 +1,145 @@
+<view class="page">
+  <!-- 账本切换：家庭 / 个人（与首页同一个 globalData.ledger） -->
+  <view class="ledger-switch">
+    <view
+      class="ledger-tab {{ledger === 'family' ? 'is-on' : ''}}"
+      data-ledger="family"
+      bindtap="onSwitchLedger"
+    >家庭账本</view>
+    <view
+      class="ledger-tab {{ledger === 'personal' ? 'is-on' : ''}}"
+      data-ledger="personal"
+      bindtap="onSwitchLedger"
+    >个人账本</view>
+  </view>
+
+  <view class="header">
+    <view class="month-nav">
+      <text class="nav-btn" bindtap="onPrevMonth">‹</text>
+      <text class="month-text">{{month}}</text>
+      <text class="nav-btn {{atCurrentMonth ? 'disabled' : ''}}" bindtap="onNextMonth">›</text>
+    </view>
+    <view class="total">{{total}}</view>
+    <view class="delta" wx:if="{{deltaText}}" style="color:{{deltaColor}}">{{deltaText}}</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+
+  <view class="empty" wx:elif="{{empty}}">
+    <view class="empty-icon">📝</view>
+    <view class="empty-text">{{emptyText}}</view>
+    <view class="empty-sub" wx:if="{{emptySub}}">{{emptySub}}</view>
+  </view>
+
+  <view class="day-group" wx:for="{{groups}}" wx:key="date">
+    <view class="day-head">
+      <text class="day-label">{{item.label}}</text>
+      <text class="day-total">{{item.dayTotalText}}</text>
+    </view>
+
+    <view class="bill-row" wx:for="{{item.items}}" wx:for-item="bill" wx:key="_id"
+          data-id="{{bill._id}}" bindtap="onBillTap">
+      <view class="bill-dot" style="background:{{bill.color || '#CFC8C0'}}"></view>
+      <view class="bill-body">
+        <view class="bill-name">
+          {{bill.categoryName}}
+          <text class="badge-recall" wx:if="{{bill.isRecall}}">补记</text>
+          <text class="badge-auto" wx:if="{{bill.isAuto}}">自动</text>
+        </view>
+        <view class="bill-path">{{bill.categoryPath}}</view>
+        <!-- 备注：列表里标出来，用户才知道这条信息没丢 -->
+        <view class="bill-meta" wx:if="{{bill.note}}">
+          <text>{{bill.note}}</text>
+        </view>
+      </view>
+      <view class="bill-amount">{{bill.amount}}</view>
+    </view>
+  </view>
+
+  <!-- ══════════ 编辑面板 ══════════ -->
+  <view class="edit-mask" wx:if="{{editOpen}}" bindtap="closeEdit">
+    <view class="edit-sheet" catchtap="noop" catchtouchmove="noop">
+
+      <view class="edit-head">
+        <text class="edit-title">编辑账目</text>
+        <text class="edit-close" bindtap="closeEdit">✕</text>
+      </view>
+
+      <!-- 金额 -->
+      <view class="edit-field">
+        <text class="edit-label">金额</text>
+        <view class="edit-amount-box">
+          <text class="edit-yuan">¥</text>
+          <input
+            class="edit-amount"
+            type="digit"
+            value="{{editAmount}}"
+            bindinput="onEditAmountInput"
+            placeholder="0.00"
+            placeholder-class="edit-ph"
+          />
+        </view>
+      </view>
+
+      <!-- 类目 -->
+      <view class="edit-field">
+        <text class="edit-label">类目</text>
+        <view class="edit-pick-box" bindtap="openCatPicker">
+          <text class="{{editCategoryLabel ? 'edit-pick-text' : 'edit-pick-text edit-ph'}}">
+            {{editCategoryLabel || '点击选择类目'}}
+          </text>
+          <text class="edit-pick-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 日期 -->
+      <view class="edit-field">
+        <text class="edit-label">日期</text>
+        <picker
+          mode="date"
+          value="{{editDate}}"
+          start="2000-01-01"
+          end="{{currentDate}}"
+          bindchange="onDateChange"
+        >
+          <view class="edit-pick-box">
+            <text class="edit-pick-text">{{editDate || '点击选择日期'}}</text>
+            <text class="edit-pick-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 备注 -->
+      <view class="edit-field">
+        <text class="edit-label">备注</text>
+        <input
+          class="edit-input"
+          value="{{editNote}}"
+          bindinput="onEditNoteInput"
+          placeholder="这笔钱花在什么上（可留空）"
+          placeholder-class="edit-ph"
+          maxlength="200"
+        />
+      </view>
+
+      <view class="edit-actions">
+        <button class="edit-btn edit-btn-ghost" bindtap="onDeleteEdit">删除</button>
+        <button
+          class="edit-btn edit-btn-primary"
+          bindtap="saveEdit"
+          loading="{{editSaving}}"
+          disabled="{{editSaving}}"
+        >{{editSaving ? '保存中' : '保存'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 类目选择器（与记账页共用 components/cat-picker） -->
+  <cat-picker
+    visible="{{catPickerVisible}}"
+    initial-id="{{editCategoryId}}"
+    bind:select="onCatPicked"
+    bind:cancel="onCatPickerCancel"
+  />
+
+</view>

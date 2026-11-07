@@ -1,0 +1,298 @@
+page { background: #FAF8F5; color: #3D3935; }
+.page { min-height: 100vh; padding: 32rpx 32rpx 60rpx; box-sizing: border-box; }
+
+/* 账本切换（与首页同款） */
+.ledger-switch { display: flex; justify-content: center; gap: 12rpx; margin: 8rpx 0 16rpx; }
+.ledger-tab {
+  padding: 10rpx 32rpx; font-size: 26rpx; color: #A8A29E;
+  background: #FFFFFF; border: 2rpx solid #EDE8E1; border-radius: 999rpx;
+}
+.ledger-tab.is-on { color: #FFFFFF; background: #7C6F64; border-color: #7C6F64; }
+
+.loading, .empty { text-align: center; padding: 120rpx 40rpx; color: #A8A29E; }
+.empty-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.empty-text { font-size: 30rpx; color: #7C6F64; margin-bottom: 12rpx; }
+.empty-sub { font-size: 24rpx; line-height: 1.6; }
+.empty-actions { margin-top: 40rpx; }
+.empty-btn {
+  display: inline-block;
+  margin: 0 12rpx;
+  padding: 18rpx 48rpx;
+  font-size: 27rpx;
+  color: #FFFFFF;
+  background: #7C6F64;
+  border-radius: 999rpx;
+  border: none;
+  line-height: 1.6;
+}
+/* 次要操作：描边而非实心，避免与主操作抢注意力 */
+.empty-btn-ghost {
+  color: #7C6F64;
+  background: transparent;
+  border: 1rpx solid #C9BEB2;
+}
+/* button 自带边框会画出方角，必须去掉 */
+.empty-btn::after { border: none; }
+
+.card {
+  background: #FFFFFF; border-radius: 28rpx;
+  padding: 32rpx; margin-bottom: 24rpx;
+}
+.card-title {
+  font-size: 30rpx; font-weight: 600; margin-bottom: 24rpx;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+/* 降级/数据说明：小字、不抢视线，但必须可见 */
+.card-note { font-size: 21rpx; color: #B8B0A8; font-weight: 400; }
+
+/* ── 顶部工具条：月份 + 更新时间 + 重新分析 ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+.toolbar-left { display: flex; flex-direction: column; }
+.toolbar-month { font-size: 30rpx; font-weight: 500; }
+.toolbar-time { font-size: 21rpx; color: #B8B0A8; margin-top: 4rpx; }
+/* 跨月后旧数据仍在，必须显著提示「这不是本月的」 */
+.toolbar-stale {
+  font-size: 21rpx; color: #B87A2E; margin-top: 4rpx;
+}
+.refresh-btn {
+  margin: 0;
+  padding: 0 28rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  font-size: 25rpx;
+  color: #7C6F64;
+  background: #FFFFFF;
+  border: 1rpx solid #E5DFD8;
+  border-radius: 999rpx;
+}
+/* button 默认宽度撑满，必须显式收窄，否则会把整行挤变形 */
+.refresh-btn::after { border: none; }
+.refresh-btn[disabled] { color: #C4BDB4; background: #F5F2EE; }
+
+/* 降级原因提示：告诉用户发生了什么、以及该做什么 */
+/* guard 级（护栏正常工作）用中性蓝灰，不制造「系统坏了」的错觉 */
+.fallback-tip {
+  margin-top: 20rpx;
+  padding: 14rpx 20rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #7C6F64;
+  background: #F7F4F0;
+  border-radius: 12rpx;
+}
+.fallback-tip[level="guard"] {
+  color: #0C447C;
+  background: #F0F6FC;
+}
+/* config 级（用户能直接解决）稍微醒目一点，因为需要用户动手 */
+.fallback-tip[level="config"] {
+  color: #8A5A1B;
+  background: #FFF9F0;
+  border: 1rpx solid #EFD9B8;
+}
+
+/* 诊断入口与结果面板 */
+/* 只有遇到降级时才出现，所以可以做得显眼一点 */
+.diag-entry {
+  margin: 0 32rpx 24rpx;
+}
+.diag-btn {
+  background: #F0F6FC;
+  color: #0C447C;
+  font-size: 26rpx;
+  border: 1rpx solid #B8D4EE;
+  border-radius: 12rpx;
+  padding: 18rpx 0;
+}
+.diag-btn::after { border: none; }
+
+.diag-panel {
+  margin-bottom: 24rpx;
+}
+.diag-line {
+  font-size: 24rpx;
+  color: #4A423C;
+  line-height: 1.8;
+  word-break: break-all;
+}
+.diag-warn {
+  margin: 12rpx 0;
+  padding: 16rpx 20rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #8A5A1B;
+  background: #FFF9F0;
+  border: 1rpx solid #EFD9B8;
+  border-radius: 12rpx;
+}
+.diag-advice {
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #EFE9E3;
+}
+.diag-advice-title {
+  font-size: 24rpx;
+  color: #7C6F64;
+  margin-bottom: 8rpx;
+}
+.diag-advice-item {
+  font-size: 24rpx;
+  color: #4A423C;
+  line-height: 1.8;
+}
+.diag-close {
+  margin-top: 20rpx;
+  background: #F7F4F0;
+  color: #7C6F64;
+  font-size: 26rpx;
+  border-radius: 12rpx;
+}
+.diag-close::after { border: none; }
+
+/* ── 本月概览 ── */
+.total-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.total-amount {
+  font-size: 56rpx; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.total-meta { font-size: 23rpx; color: #A8A29E; }
+.delta { margin-top: 12rpx; font-size: 24rpx; color: #A8A29E; }
+/* 涨跌用颜色区分（红涨绿跌），flat 走默认灰色 */
+.delta[dir="up"] { color: #D94F4F; }
+.delta[dir="down"] { color: #3D9970; }
+
+/* ── 分类占比 ── */
+.pie-row { display: flex; align-items: center; margin-bottom: 18rpx; }
+.pie-dot { width: 18rpx; height: 18rpx; border-radius: 50%; margin-right: 16rpx; flex-shrink: 0; }
+.pie-name { width: 180rpx; font-size: 26rpx; }
+.pie-bar { flex: 1; height: 14rpx; background: #F0EDE9; border-radius: 999rpx; overflow: hidden; }
+.pie-fill { height: 100%; border-radius: 999rpx; }
+.pie-value { width: 90rpx; text-align: right; font-size: 24rpx; color: #A8A29E; }
+
+/* ── 消费习惯分析 ── */
+.insight {
+  font-size: 27rpx; line-height: 1.7; color: #5C5450;
+  padding: 16rpx 0; border-bottom: 1rpx solid #F5F2EE;
+}
+.insight:last-child { border-bottom: none; padding-bottom: 0; }
+
+/* ── 可以这样省 ── */
+.saving { padding: 20rpx 0; border-bottom: 1rpx solid #F5F2EE; }
+.saving:last-child { border-bottom: none; padding-bottom: 0; }
+.saving-head { display: flex; justify-content: space-between; align-items: baseline; }
+.saving-title { font-size: 28rpx; }
+.saving-amount { font-size: 26rpx; color: #3D9970; font-weight: 600; }
+.saving-action, .saving-trigger {
+  font-size: 23rpx; color: #A8A29E; margin-top: 8rpx;
+}
+/* 依据：让用户看到建议是从什么推出来的 */
+.saving-reason {
+  font-size: 22rpx; color: #B8B0A8; margin-top: 8rpx;
+  padding-left: 16rpx; border-left: 3rpx solid #E5DFD8;
+}
+/* 「可以这样省」为空时的说明 */
+/* 不能留空卡片：用户会以为「我没有可优化的地方」，于是不再记账 */
+.saving-empty {
+  padding: 12rpx 0 4rpx;
+}
+.saving-empty-text {
+  display: block;
+  font-size: 26rpx;
+  color: #7C6F64;
+}
+.saving-empty-hint {
+  display: block;
+  font-size: 22rpx;
+  color: #B8B0A8;
+  margin-top: 8rpx;
+  line-height: 1.6;
+}
+/* AI 暂不可用时的重试按钮：轻量描边风格，不与主按钮抢视觉 */
+.saving-retry-btn {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #6B5B4C;
+  background: #FFFDF9;
+  border: 1rpx solid #E5DCCF;
+  border-radius: 12rpx;
+  padding: 10rpx 0;
+  line-height: 1.5;
+}
+
+/* 低置信：必须显眼。虚线框是「这里有不确定性」的通用视觉语言 */
+.saving-lowtip {
+  margin-top: 12rpx;
+  padding: 10rpx 16rpx;
+  font-size: 21rpx;
+  color: #B87A2E;
+  background: #FFF9F0;
+  border: 1rpx dashed #EFD9B8;
+  border-radius: 10rpx;
+}
+
+/* ── 近半年趋势 ── */
+.trend {
+  display: flex; align-items: flex-end;
+  height: 280rpx; padding-top: 20rpx;
+}
+.trend-col {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  height: 100%;
+}
+.trend-val {
+  font-size: 19rpx; color: #B8B0A8; margin-bottom: 8rpx;
+  font-variant-numeric: tabular-nums;
+}
+/* 柱区占满剩余高度，柱子用百分比高度撑开 */
+.trend-bar-wrap {
+  width: 28rpx; flex: 1;
+  display: flex; align-items: flex-end;
+}
+.trend-bar {
+  width: 100%;
+  background: #C9B9AA;
+  border-radius: 8rpx 8rpx 0 0;
+  min-height: 4rpx;
+}
+/* 零消费月份：画一条基线而不是留白，
+   否则「本月没花钱」和「数据没加载出来」在视觉上无法区分 */
+.trend-bar[style*="height:0%"] { background: #E5DFD8; }
+.trend-month { font-size: 20rpx; color: #A8A29E; margin-top: 12rpx; }
+.trend-tip { font-size: 21rpx; color: #C4BDB4; margin-top: 16rpx; text-align: center; }
+/* ── 结论已过期提示 ──
+   账目改动后旧结论仍在展示，必须让用户知道它不是最新的。
+   用警示色但不用错误红：这不是故障，是「数据变了，该更新了」。 */
+.outdated-tip {
+  display: flex;
+  align-items: center;
+  background: #FFF9F0;
+  border: 1rpx solid #EFD9B8;
+  border-radius: 16rpx;
+  padding: 18rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+.outdated-icon {
+  width: 32rpx; height: 32rpx;
+  border-radius: 50%;
+  background: #E9A23B;
+  color: #FFFFFF;
+  font-size: 22rpx;
+  text-align: center;
+  line-height: 32rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+.outdated-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #8A6420;
+  line-height: 1.5;
+}
