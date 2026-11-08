@@ -253,11 +253,20 @@ function reset() {
  * 今天跑是 11 月、明天跑是 12 月 → 造的账单月份对不上 → 断言时好时坏。
  * 固定 `Time` 让月份恒定，测试才可复现。
  *
+ * ⚠️ 事件形状按**平台实测**（2026-11-08 云端日志）构造：
+ * `Type` 是**小写** `'timer'`（官方文档写大写 'Timer'，实际下发小写），
+ * 且额外带 `tcbContext` / `userInfo` 字段。归一判据大小写不敏感
+ * （见 analysis-svc 的 isTimerEvent），大写兼容用例在下方单独覆盖。
+ *
  * @param {string} isoTime 触发时刻（ISO 字符串，UTC）
  * @param {object} extra 额外字段（如 payload，用于测防注入）
  */
 function timerEvent(isoTime, extra = {}) {
-  return { Type: 'Timer', TriggerName: 'dailyInsight', Time: isoTime, Message: '', ...extra };
+  return {
+    Message: '', Time: isoTime, TriggerName: 'dailyInsight', Type: 'timer',
+    tcbContext: 0, userInfo: { appId: 'wx-test-appid' },
+    ...extra
+  };
 }
 
 /** 固定在 2026-10 内的触发时刻（东八区仍是 10 月） */
@@ -417,6 +426,10 @@ async function main() {
   // 官方 event 结构（腾讯云 SCF / 微信云开发 定时触发器）：
   //   { Type:'Timer', TriggerName:'dailyInsight', Time:'...', Message:'' }
   // **没有 action 字段。**
+  //
+  // 2026-11-08 再补一层：官方文档写 `Type:'Timer'`（大写），
+  // 但云端日志实测平台实际下发**小写 `Type:'timer'`** + `tcbContext`/`userInfo`。
+  // timerEvent() 已按实测形状构造；下方另有「大写兼容」用例覆盖文档形状。
 
   await test('官方 Timer event 能进 dailyInsight 并落库', async () => {
     reset();
@@ -534,6 +547,18 @@ async function main() {
     assert.strictEqual(r.ok, true, `定时触发应成功，实际：${r.error}`);
     assert.notStrictEqual(r.data.month, '1999-01', '外部构造的 month 不应生效');
     assert.strictEqual(r.data.month, '2026-11', '月份应来自触发时刻，而非外部 payload');
+  });
+
+  await test('兼容历史大写 Type=Timer（官方文档形状，判据大小写不敏感）', async () => {
+    reset();
+    seedUser('u_cap', 3, 1000, '2026-11-03');
+    const r = await svc.main(
+      { Type: 'Timer', TriggerName: 'dailyInsight', Time: TIMER_NOV_BOUNDARY, Message: '' },
+      {}
+    );
+    assert.strictEqual(r.ok, true, `大写 Timer 也应命中（大小写不敏感），实际：${r.error}`);
+    assert.strictEqual(r.data.month, '2026-11', '月份应来自触发时刻');
+    assert.ok(r.data.processed >= 1, `至少应处理一个用户，实际 processed=${r.data.processed}`);
   });
 
   console.log(`\n${failed === 0 ? '✓ 全部通过' : '✗ 有失败'}：${passed} 通过 / ${failed} 失败\n`);

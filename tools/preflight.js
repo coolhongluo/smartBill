@@ -559,6 +559,34 @@ if (fs.existsSync(analysisCfgPath)) {
   }
 }
 
+/**
+ * 定时触发器归一判据守卫（2026-11-08 修复后加的防线）
+ *
+ * ## 为什么需要它
+ *
+ * 2026-11-08 00:30 云端日志实测（请求 860de654）：平台实际下发的
+ * 定时事件 `Type` 是**小写** `'timer'`（官方文档写大写 `'Timer'`），
+ * 且额外带 `tcbContext`/`userInfo` 字段。此前两个云函数的归一判据
+ * 写死 `Type === 'Timer'`（大写）→ 云端真实事件**永不命中** →
+ * 每天 0:00 分析 / 0:30 重复记账静默失败，而测试按文档大写构造全绿 ——
+ * 本地全绿 ≠ 云端能跑。
+ *
+ * 修法是判据大小写不敏感（isTimerEvent）。这条守卫防回归：
+ * 谁再把判据改回写死大写，preflight 当场报警。
+ */
+{
+  const caseInsensitivePattern = /\.toLowerCase\(\)\s*===\s*['"]timer['"]/;
+  for (const svcName of ['analysis-svc', 'bill-svc']) {
+    const src = fs.readFileSync(path.join(ROOT, 'cloudfunctions', svcName, 'index.js'), 'utf8');
+    if (caseInsensitivePattern.test(src)) {
+      ok(`${svcName} 定时事件归一判据大小写不敏感（平台实测下发小写 'timer'）`);
+    } else {
+      bad(`${svcName} 定时事件归一判据疑似写死大小写 —— 平台实际下发 Type='timer'（小写），` +
+        '写死大写会导致定时任务每天静默失败（2026-11-08 实测故障）');
+    }
+  }
+}
+
 console.log('\n[7/9] 数据库就绪度');
 
 /**

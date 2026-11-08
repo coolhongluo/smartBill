@@ -170,7 +170,8 @@ function printChain(chain, raw) {
   if (summary) {
     const p = summary.payload;
     console.log(`\n结果      : ${p.isFallback ? '降级（规则版）' : '模型路径'}`);
-    console.log(`Agent     : ${p.agent} v${p.version || '-'}`);
+    const verLabel = /^v/i.test(p.version || '') ? p.version : `v${p.version || '-'}`;
+    console.log(`Agent     : ${p.agent} ${verLabel}`);
     if (p.reason) console.log(`降级原因  : ${p.reason}`);
     if (p.usage) {
       console.log(`Token     : ${p.usage.total_tokens || 0} ` +

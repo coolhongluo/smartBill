@@ -140,7 +140,7 @@ users/family_${familyId}_insight: { familyId, version, payload{month,...}, gener
 |---|---|
 | `cloudfunctions/shared/db/__tests__/family-store.test.js`（17 用例） | profile 白名单/null 不写/幂等 + 家庭 insight 存储隔离与拍平读取 |
 | `tools/__tests__/family.test.js`（39 用例） | 创建/邀请码/成员/退出/解散 + 双空间记账 + 家庭分析 v1 全链路 + 越权 + 家庭规则退出/解散自动暂停 |
-| `tools/__tests__/recurring-rule.test.js`（27 用例） | 规则 CRUD 校验 + 家庭账本创建校验/账本不可改/生成分流/幂等/失效跳过/老规则兼容 |
+| `tools/__tests__/recurring-rule.test.js`（28 用例） | 规则 CRUD 校验 + 家庭账本创建校验/账本不可改/生成分流/幂等/失效跳过/老规则兼容 |
 
 守卫收尾：`npm test` → `npm run preflight` → `npm run check:ui` → `npm run prepare:cf` → 部署 user-svc / bill-svc / analysis-svc（「云端安装依赖」）。
 

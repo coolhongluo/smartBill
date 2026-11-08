@@ -18,7 +18,7 @@ let cloudReady = false;
  * 否则前端会一直提示「云端版本过旧」，那是误报。
  * 值必须与 cloudfunctions/shared/util/constants.js 的 CODE_VERSION 一致。
  */
-const EXPECTED_CODE_VERSION = '20261103-01';
+const EXPECTED_CODE_VERSION = '20261108-01';
 
 /**
  * 对账云端代码版本 —— 只警告，不阻断（2026-11-03 起）

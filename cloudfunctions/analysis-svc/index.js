@@ -115,6 +115,26 @@ exports.main = async (event, context) => {
  *   · keys 为空 → 是平台空事件（保活），与定时器无关
  * 业务 payload 不进日志；未知形态才打原始内容（截断防超长）。
  */
+/**
+ * 判「是不是定时触发器事件」—— 大小写不敏感
+ *
+ * 官方文档写的是 `Type:'Timer'`（大写 T），但 **2026-11-08 云端日志实测**
+ * 平台实际下发的是 `Type:'timer'`（**小写 t**），且额外带
+ * `tcbContext` / `userInfo` 字段（bill-svc 的 dailyRecurring 0:30 触发实测）：
+ *   { Message:'', Time:'2026-11-07T16:30:00Z', TriggerName:'dailyRecurring',
+ *     Type:'timer', tcbContext:0, userInfo:{ appId:'...' } }
+ *
+ * 2026-10-31 的修复判据写死 `Type === 'Timer'`（大写）→ 云端真实事件
+ * **永不命中** → action=undefined → 「未知操作: undefined」→
+ * 定时任务每天静默失败，而测试按文档大写构造 → 本地全绿 ≠ 云端能跑。
+ * 所以这里大小写都认，测试两侧形状都覆盖（2026-11-08 修复）。
+ */
+function isTimerEvent(event) {
+  return !!event &&
+    typeof event.Type === 'string' &&
+    event.Type.toLowerCase() === 'timer';
+}
+
 function summarizeEvent(event) {
   if (!event) return 'event 为空';
   if (typeof event !== 'object') {
@@ -123,7 +143,7 @@ function summarizeEvent(event) {
   const keys = Object.keys(event).join(',') || '(无键)';
   const base = `keys=[${keys}] action=${JSON.stringify(event.action)} ` +
     `Type=${JSON.stringify(event.Type)} TriggerName=${JSON.stringify(event.TriggerName)}`;
-  if (event.Type === 'Timer' || typeof event.action === 'string') return base;
+  if (isTimerEvent(event) || typeof event.action === 'string') return base;
   return `${base} raw=${JSON.stringify(event).slice(0, 500)}`;
 }
 
@@ -132,13 +152,9 @@ function summarizeEvent(event) {
  *
  * ## 为什么必须有这一步
  *
- * 官方定时触发器下发的 event 结构是：
- *   { Type: 'Timer', TriggerName: 'dailyInsight', Time: '...', Message: '' }
- *
- * **它没有 `action` 字段。**
- * 而上面的 switch 认的是 `event.action` → 直接解构出 `undefined`
- * → 落 `default` 分支 → 返回「未知操作: undefined」
- * → **每天 0 点静默什么都没发生，且没有任何报错。**
+ * 官方定时触发器下发的 event **没有 `action` 字段**，而 switch 认的是
+ * `event.action` → 解构出 `undefined` → 落 `default` 分支 →
+ * 返回「未知操作: undefined」→ 定时任务每天静默什么都没发生，且没有任何报错。
  *
  * 真实故障（2026-10-31 实测）：
  *   喂官方真实 event → ok=false、落库 0 条
@@ -148,11 +164,21 @@ function summarizeEvent(event) {
  *
  * ## 认什么特征
  *
- * 用 `Type === 'Timer'`（官方 Timer 触发器的固定值）作为**主判据**，
+ * 用 `Type`（定时触发器事件的固定字段）作为**主判据**，
  * `TriggerName` 作为交叉校验。
  *
+ * ⚠️ **判据必须大小写不敏感（2026-11-08 云端日志实测）**：
+ * 官方文档写 `Type:'Timer'`（大写 T），但平台实际下发的是
+ * **`Type:'timer'`（小写 t）**，且额外带 `tcbContext`/`userInfo` 字段：
+ *   { Message:'', Time:'...Z', TriggerName:'dailyInsight',
+ *     Type:'timer', tcbContext:0, userInfo:{ appId:'...' } }
+ * 2026-10-31 的修复判据写死大写 `'Timer'` → 云端真实事件**永不命中**，
+ * 定时分析每天照样静默失败（bill-svc 的 dailyRecurring 于
+ * 2026-11-08 00:30 在云端日志实测复现同一故障）。判据统一走
+ * `isTimerEvent()`：大小写都认，测试两侧形状都覆盖。
+ *
  * ⚠️ 为什么不用 `TriggerName` 单独判：它是可以被外部伪造的普通字段。
- * `Type === 'Timer'` 虽然也只是 event 里的字段，但外部调用要伪造它
+ * `Type` 虽然也只是 event 里的字段，但外部调用要伪造它
  * 必须**主动构造**这个形状 —— 而 `isTriggerSource()` 会在下游
  * 再次校验 `getWXContext().SOURCE === 'wx_trigger'`，
  * **外部无法伪造 SOURCE**，所以伪造 event 也拿不到越权能力。
@@ -160,11 +186,11 @@ function summarizeEvent(event) {
  * ## 为什么不让 payload 透传
  *
  * 定时触发器不该带 payload（平台不会传）。
- * 这里显式丢弃 —— 避免外部构造 `{Type:'Timer', payload:{...}}` 时
+ * 这里显式丢弃 —— 避免外部构造 `{Type:'timer', payload:{...}}` 时
  * 把 `cursor`/`month` 等参数带进批量任务。
  */
 function normalizeEvent(event) {
-  const isTimer = event && event.Type === 'Timer';
+  const isTimer = isTimerEvent(event);
 
   if (isTimer) {
     // 触发器名对不上 → 不静默放行，返回一个必然落 default 的 action

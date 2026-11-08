@@ -38,14 +38,16 @@
 ⚠️ **cron 是 7 段**（不是 5 段）：`0 0 0 * * * *` = 每天 0 点（UTC+8）。
 ⚠️ **`config.json` 不能有注释** —— 云开发不解析注释，写了注释会导致配置解析失败。
 
-**触发器下发的 event 结构（官方）**：
-```json
-{ "Type": "Timer", "TriggerName": "dailyInsight", "Time": "2026-10-31T16:00:00Z", "Message": "" }
-```
+**触发器下发的 event 结构**：
+- 官方文档写法：`{ "Type": "Timer", "TriggerName": "dailyInsight", "Time": "...Z", "Message": "" }`
+- **平台实测（2026-11-08 云端日志，请求 `860de654`）**：`Type` 是**小写 `"timer"`**，
+  且额外带 `tcbContext` / `userInfo` 字段：
+  `{ "Message":"", "Time":"2026-11-07T16:30:00Z", "TriggerName":"dailyRecurring", "Type":"timer", "tcbContext":0, "userInfo":{"appId":"..."} }`
 
-⚠️ **它没有 `action` 字段** —— 所以 `analysis-svc` 的入口要做**分发归一**
-（`normalizeEvent()`）：识别 `Type === 'Timer'` → 映射成 `action = 'dailyInsight'`。
-不做这一步 → 落 `default` 分支 → **定时分析每天都静默不执行**。
+⚠️ **它没有 `action` 字段** —— 所以两个云函数的入口要做**分发归一**
+（`normalizeEvent()`）：`isTimerEvent()` 判 `Type`（**大小写不敏感**）→ 映射成对应 action。
+不做这一步 → 落 `default` 分支 → **定时任务每天都静默不执行**。
+判据写死大写 `'Timer'` 曾让归一在云端永不命中（2026-11-08 修复，版本 `20261108-01`，见 `engineering/20-pitfalls.md` §19）。
 
 ⚠️ **`Time` 是 UTC**，而 cron 规则是 UTC+8 → 月份必须按**东八区**算
 （`dateUtil.toMonthStrCST()`），否则每月 1 号会分析上个月的数据。
@@ -67,11 +69,11 @@
    │  config.json:7-13  triggers: [{ name:'dailyInsight', type:'timer', config:'0 0 0 * * * *' }]
    ▼
 微信云开发平台 → 调用 analysis-svc 的 index.main
-   │  官方 event：{ Type:'Timer', TriggerName:'dailyInsight', Time:'...Z', Message:'' }
-   │  ⚠️ 没有 action 字段（2026-10-31 实测修复，之前每天静默不执行）
+   │  实测 event：Type 是**小写 'timer'**（文档写 'Timer'），带 tcbContext/userInfo
+   │  ⚠️ 没有 action 字段（2026-10-31 补归一、2026-11-08 判据改大小写不敏感）
    ▼
-main() → normalizeEvent(event)                          index.js:78 → 142
-   │  · 主判据 Type === 'Timer'，交叉校验 TriggerName === 'dailyInsight'
+main() → normalizeEvent(event)                          index.js:192
+   │  · 主判据 isTimerEvent()（Type 大小写不敏感，index.js:132），交叉校验 TriggerName === 'dailyInsight'
    │  · 显式丢弃平台 payload（防外部构造参数带进批量任务）
    │  · triggeredAt = parseTriggerTime(event.Time)（UTC ISO，解析失败回落 Date.now()）
    ▼
@@ -118,9 +120,10 @@ refreshInsight(context, { targetOpenid, month })        index.js:614-618 → 438
 每天 0:30（UTC+8，7 段 cron，晚于 analysis 的 0:00）
    │  config.json:9-15  triggers: [{ name:'dailyRecurring', type:'timer', config:'0 30 0 * * * *' }]
    ▼
-main() → normalizeEvent(event)                          index.js:141-152
-   │  · Type === 'Timer' + TriggerName === 'dailyRecurring' → { action:'dailyRecurring', payload:{triggeredAt} }
-   │  · 与 analysis-svc 的归一同款（官方 Timer event 没有 action 字段）
+main() → normalizeEvent(event)                          index.js:195
+   │  · isTimerEvent()（Type 大小写不敏感，index.js:157）+ TriggerName === 'dailyRecurring'
+   │    → { action:'dailyRecurring', payload:{triggeredAt} }
+   │  · 与 analysis-svc 的归一同款（Timer event 没有 action 字段，Type 实测小写）
    ▼
 handleDailyRecurring()                                  index.js:1162-1233
    │  ① isTriggerSource()：getWXContext().SOURCE === 'wx_trigger'，否则拒绝（TRIGGER_ONLY） index.js:1247

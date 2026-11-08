@@ -180,7 +180,7 @@ const RECALL_VALID_DAYS = 90;
  *
  * 版本号格式：`YYYYMMDD-NN`，NN 为当天第几次改动。
  */
-const CODE_VERSION = '20261103-01';
+const CODE_VERSION = '20261108-01';
 
 module.exports = {
   CONFIDENCE,

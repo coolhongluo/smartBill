@@ -140,6 +140,26 @@ exports.main = async (event, context) => {
  * 业务 payload 不进日志；只有未知形态（既非 Timer 也无 action）才打原始内容，
  * 且截断防超长。
  */
+/**
+ * 判「是不是定时触发器事件」—— 大小写不敏感
+ *
+ * **2026-11-08 00:30 云端日志实测**（请求 860de654）：平台实际下发的
+ * event 是 `Type:'timer'`（**小写 t**，官方文档写的是大写 `'Timer'`），
+ * 且额外带 `tcbContext` / `userInfo` 字段：
+ *   { Message:'', Time:'2026-11-07T16:30:00Z', TriggerName:'dailyRecurring',
+ *     Type:'timer', tcbContext:0, userInfo:{ appId:'...' } }
+ *
+ * 此前判据写死 `Type === 'Timer'`（大写）→ 云端真实事件**永不命中** →
+ * action=undefined → 「未知操作: undefined」→ 重复记账每天静默不生成，
+ * 而测试按文档大写构造 → 本地全绿 ≠ 云端能跑。
+ * 所以这里大小写都认，测试两侧形状都覆盖（2026-11-08 修复）。
+ */
+function isTimerEvent(event) {
+  return !!event &&
+    typeof event.Type === 'string' &&
+    event.Type.toLowerCase() === 'timer';
+}
+
 function summarizeEvent(event) {
   if (!event) return 'event 为空';
   if (typeof event !== 'object') {
@@ -148,25 +168,32 @@ function summarizeEvent(event) {
   const keys = Object.keys(event).join(',') || '(无键)';
   const base = `keys=[${keys}] action=${JSON.stringify(event.action)} ` +
     `Type=${JSON.stringify(event.Type)} TriggerName=${JSON.stringify(event.TriggerName)}`;
-  if (event.Type === 'Timer' || typeof event.action === 'string') return base;
+  if (isTimerEvent(event) || typeof event.action === 'string') return base;
   return `${base} raw=${JSON.stringify(event).slice(0, 500)}`;
 }
 
 /**
  * 事件归一 —— 让定时触发器能进到 dailyRecurring
  *
- * 官方定时触发器下发的 event 是 { Type:'Timer', TriggerName, Time }，
- * **没有 action 字段**，直接解构会落「未知操作: undefined」。
- * 这是本项目真实踩过的坑（analysis-svc 的 dailyInsight 曾因此
- * 每天静默不执行，2026-10-31 修复，见 docs/wiki/engineering/20-pitfalls.md §19）。
+ * 定时触发器下发的 event **没有 action 字段**，直接解构会落
+ * 「未知操作: undefined」。这是本项目真实踩过的坑（analysis-svc 的
+ * dailyInsight 曾因此每天静默不执行，2026-10-31 修复，
+ * 见 docs/wiki/engineering/20-pitfalls.md §19）。
  *
- * 认什么特征：`Type === 'Timer'` 作主判据，`TriggerName` 交叉校验。
- * ⚠ 两者都只是 event 字段、可被前端伪造 —— 真正的越权防线在
- * handleDailyRecurring 里的 `SOURCE === 'wx_trigger'` 校验，
+ * 认什么特征：`Type` 作主判据（**大小写不敏感**，见 isTimerEvent），
+ * `TriggerName` 交叉校验。
+ *
+ * ⚠️ 2026-11-08 00:30 云端日志实测：平台实际下发 `Type:'timer'`
+ * （**小写 t**，官方文档写大写 `'Timer'`），此前写死大写判据 →
+ * 云端真实事件永不命中，重复记账每天静默不生成 ——
+ * 本地全绿 ≠ 云端能跑（这是本项目最高频的故障模式）。
+ *
+ * ⚠ Type/TriggerName 都只是 event 字段、可被前端伪造 —— 真正的
+ * 越权防线在 handleDailyRecurring 里的 `SOURCE === 'wx_trigger'` 校验，
  * 外部无法伪造 SOURCE。
  */
 function normalizeEvent(event) {
-  if (event && event.Type === 'Timer') {
+  if (isTimerEvent(event)) {
     const name = String(event.TriggerName || '');
     if (name && name !== 'dailyRecurring') {
       console.warn(`[bill-svc] 未知定时触发器：${name}`);

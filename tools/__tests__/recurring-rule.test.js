@@ -373,12 +373,25 @@ async function run() {
       note: '', account: 'unknown', repeat: { type: 'daily' }, status: 'active', nextDate: '2026-11-03'
     });
     mockSource = 'wx_trigger';
+    // ⚠️ 事件形状按**平台实测**（2026-11-08 00:30 云端日志，请求 860de654）构造：
+    // Type 是**小写** 'timer'（官方文档写大写 'Timer'），且带 tcbContext/userInfo。
     const res = await billSvc.main({
-      Type: 'Timer', TriggerName: 'dailyRecurring', Time: '2026-11-02T00:30:00+08:00'
+      Message: '', Time: '2026-11-02T00:30:00+08:00', TriggerName: 'dailyRecurring',
+      Type: 'timer', tcbContext: 0, userInfo: { appId: 'wx-test-appid' }
     }, {});
     mockSource = undefined;
     if (!res.ok) throw new Error(`触发器归一失败：${JSON.stringify(res)}`);
     if (res.date !== TODAY) throw new Error('归一后应解析出触发日 2026-11-02');
+  });
+
+  test('兼容历史大写 Type=Timer（官方文档形状，判据大小写不敏感）', async () => {
+    mockSource = 'wx_trigger';
+    const res = await billSvc.main({
+      Type: 'Timer', TriggerName: 'dailyRecurring', Time: '2026-11-02T00:30:00+08:00', Message: ''
+    }, {});
+    mockSource = undefined;
+    if (!res.ok) throw new Error(`大写 Timer 兼容失败：${JSON.stringify(res)}`);
+    if (res.date !== TODAY) throw new Error('大写 Timer 归一后应解析出触发日 2026-11-02');
   });
 
   section('【4】家庭账本规则（创建校验 + 生成分流 + 失效防线）');

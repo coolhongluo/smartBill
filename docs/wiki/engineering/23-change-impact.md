@@ -204,7 +204,7 @@
 | 2 | `cloudfunctions/shared/util/date.js` | `getWeekdayCST`（东八区星期，触发器下本地时区是 UTC） |
 | 3 | `cloudfunctions/shared/util/constants.js:53` | `COLLECTIONS.RECURRING` |
 | 4 | `cloudfunctions/shared/db/index.js:1191-1294` | 6 个规则函数 + `insertBillAsUser`（`:124`，触发器写账单专用） |
-| 5 | `cloudfunctions/bill-svc/index.js:996-1335` | 6 个 action + `advanceRuleCursor`（`:1335`）+ `normalizeEvent`（`:141`）+ `buildBill` 的 `ruleId` |
+| 5 | `cloudfunctions/bill-svc/index.js:996-1335` | 6 个 action + `advanceRuleCursor`（`:1335`）+ `normalizeEvent`（`:195`，判据 `isTimerEvent` 大小写不敏感，见 `20-pitfalls.md` §19）+ `buildBill` 的 `ruleId` |
 | 6 | `cloudfunctions/bill-svc/config.json:9-15` | 定时触发器 `dailyRecurring`（0:30 UTC+8） |
 | 7 | `miniprogram/utils/cloud.js` | 5 个封装（ruleCreate/ruleList/ruleUpdate/rulePause/ruleDelete） |
 | 8 | `miniprogram/pages/recurring/manage.*` + `app.json` + `profile.*` | 新页面 + 注册 + 「我的」页入口 |
@@ -215,7 +215,7 @@
 | 测试 | 触发条件 |
 |---|---|
 | `tools/__tests__/recurring-schedule.test.js`（17 用例） | 改调度纯函数（月末跳过 / 闰年 2-29 / 季度 1-4-7-10 月 / CST 独立性） |
-| `tools/__tests__/recurring-rule.test.js`（27 用例） | 改规则 CRUD 校验、游标前移、幂等、`insertBillAsUser` 归属、触发器归一、家庭账本（创建校验/账本不可改/生成分流/失效跳过/老规则兼容） |
+| `tools/__tests__/recurring-rule.test.js`（28 用例） | 改规则 CRUD 校验、游标前移、幂等、`insertBillAsUser` 归属、触发器归一（平台实测小写 `Type:'timer'` 形状 + 大写兼容）、家庭账本（创建校验/账本不可改/生成分流/失效跳过/老规则兼容） |
 | `tools/check-frontend.js` | 新页面 WXML 绑定字段断裂 / detail 新 badge 字段 |
 | preflight 版本戳段 | `CODE_VERSION` / `EXPECTED_CODE_VERSION` 不同步 |
 
@@ -224,6 +224,7 @@
 | 风险 | 防线 |
 |---|---|
 | **触发器两步部署漏做**（「增量上传 config.json」≠「上传触发器」）→ 每天静默不生成 | 只能人工，见 §7.1 补充；与 `analysis-svc` 历史上「每天静默不执行」同一坑（`20-pitfalls.md` §19 §20） |
+| **归一判据写死大写 `'Timer'`** → 平台实测下发小写 `'timer'`（2026-11-08 云端日志，请求 `860de654`）→ 云端事件永不命中、每天静默不生成 | 判据大小写不敏感（`isTimerEvent`，`bill-svc/index.js:157` / `analysis-svc/index.js:132`）+ preflight 守卫（`20-pitfalls.md` §19） |
 | `recurring` 集合没手工建 → 建规则报错、生成失败 | `REQUIRED_COLLECTIONS`（`db/index.js:1461`）+ diag 面板可查 |
 | 触发器无 openid 走 `insertBill` → 账单写错用户或直接 throw | 专用 `insertBillAsUser`，`recurring-rule.test.js` 断言 `bill.userId === rule.userId` |
 | 时区错（用本地时区算「今天」）→ 0:30 生成「昨天」的账单 | 全链 `toDateStrCST` / `getWeekdayCST`，测试覆盖 |

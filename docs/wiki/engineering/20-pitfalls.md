@@ -340,30 +340,44 @@ extractAmount("买了12万的车") = { amountCent: 1200, certain: true, pattern:
 
 ---
 
-## 19. 定时触发器 event 结构 ≠ action 分发
+## 19. 定时触发器 event 结构 ≠ action 分发（同一个坑踩了两段）
 
-> ✅ **已修复（2026-10-31，版本 `20261031-02`）** —— 修复前定时分析**从未真正执行过**。
+> ✅ **已修复，分两次**：
+> 2026-10-31（版本 `20261031-02`）补了分发归一；
+> 2026-11-08（版本 `20261108-01`）把判据改**大小写不敏感**。
+> 两次修复前定时分析**从未真正执行过**（第二段坑里，0:30 的重复记账同样每天静默失败）。
 
-**现象**：定时任务每天 0 点跑，但**什么都没发生**，无报错。
+**现象**：定时任务每天到点跑，但**什么都没发生**，无报错。
 
-**根因**：官方定时触发器下发的 event 是
-`{ Type:'Timer', TriggerName:'dailyInsight', Time:'...', Message:'' }` ——
+**根因（第一段，2026-10-31）**：官方定时触发器下发的 event
 **没有 `action` 字段**。而 `analysis-svc/index.js` 的分发认的是 `event.action`
 → 解构出 `undefined` → `switch` 落 `default` → 返回「未知操作: undefined」。
+
+**根因（第二段，2026-11-08 云端日志实测）**：平台实际下发的 `Type` 是
+**小写 `'timer'`**（官方文档写大写 `'Timer'`），且额外带 `tcbContext`/`userInfo` 字段。
+2026-10-31 的修复判据写死大写 `'Timer'` → 云端真实事件**照样永不命中**，
+0:00 分析、0:30 重复记账每天都静默失败。bill-svc 的 0:30 云端日志实测
+（2026-11-08，请求 `860de654`）：
+`{ Message:'', Time:'2026-11-07T16:30:00Z', TriggerName:'dailyRecurring', Type:'timer', tcbContext:0, userInfo:{ appId:'...' } }`
 
 **实测（修复前）**：喂官方真实 event → `ok=false`、落库 0 条；
 喂 `{action:'dailyInsight'}` → `ok=true`、processed=1。
 
-**根因之二**：现有测试全部**手工构造** `{action:'dailyInsight'}`，
-绕过了「平台怎么下发 event」这一层 → **测试全绿但功能是死的**。
+**根因之三**：测试全部按**文档大写结构**构造 event，
+绕过了「平台实际怎么下发」这一层 → **测试全绿但功能是死的**。
+「本地全绿 ≠ 云端能跑」在本项目连续踩中两次（分析 + 重复记账）。
 
-**修法**：在入口做**分发归一** —— `normalizeEvent()` 识别 `event.Type === 'Timer'`
-→ 映射成 `action='dailyInsight'`；`TriggerName` 对不上则拒绝（不误跑批量任务）。
+**修法**：在入口做**分发归一** —— `normalizeEvent()` 用 `isTimerEvent()`
+判 `Type`（**大小写不敏感**：`event.Type.toLowerCase() === 'timer'`）→
+映射成对应 action；`TriggerName` 对不上则拒绝（不误跑批量任务）。
+两个云函数各一处：`analysis-svc/index.js:132` 与 `bill-svc/index.js:157`。
 
 **防线**：
-- 测试用**官方真实 event 结构**喂（`daily-insight.test.js` 的「官方定时触发器事件结构」段）
-- `Timer` 的 `payload` **不透传** —— 防外部构造 `{Type:'Timer', payload:{month,cursor}}` 注入参数
+- 测试按**平台实测形状**（小写 `Type:'timer'` + `tcbContext`/`userInfo`）喂，
+  另有「大写兼容」用例覆盖文档形状（`daily-insight.test.js`、`recurring-rule.test.js`）
+- `Timer` 的 `payload` **不透传** —— 防外部构造 `{Type:'timer', payload:{month,cursor}}` 注入参数
 - 下游 `isTriggerSource()` 仍校验 `SOURCE === 'wx_trigger'`（**外部无法伪造 SOURCE**）
+- preflight 新增守卫：两个云函数的归一判据必须是大小写不敏感，改回写死大写当场报警
 
 > ⚠️ **cron 本身是对的**：`0 0 0 * * * *` 是 7 段 = 每天 0 点（UTC+8）。别去改 cron。
 

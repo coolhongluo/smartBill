@@ -256,6 +256,9 @@ Page({
         });
         return;
       }
+      // 从手动面板提交的（文字模式 / 引导流程切到文字模式），面板收起后
+      // 结果卡在页面顶部，用户停在原滚动位置会看不到入账确认和撤销窗口
+      const panelWasOpen = this.data.manualPanel;
       this.setData({
         result: {
           kind: 'saved',
@@ -270,6 +273,8 @@ Page({
         recordState: STATE.IDLE,
         manualPanel: false,
         manualText: ''
+      }, () => {
+        if (panelWasOpen) this.scrollToSavedCard();
       });
       this.beginUndoCountdown();
       this.loadMonthSummary();
@@ -394,8 +399,36 @@ Page({
       // 备注预填总结结果，用户可直接改；没有总结时才退回原始口述
       manualNote: result.note || this.data.finalText,
       manualDate: today()
+    }, () => {
+      // 面板排在结果卡下方，保存按钮在首屏之外。趁类目选择器遮屏时
+      // 先把页面滚到面板位置——用户关掉选择器后直接看到表单和「保存」，
+      // 不用自己再往下找。
+      this.scrollManualPanelIntoView();
     });
     this.openCatPicker();
+  },
+
+  /** 把手动面板滚进首屏（引导手工设置类目时保存按钮在首屏外） */
+  scrollManualPanelIntoView() {
+    wx.pageScrollTo({
+      selector: '.manual-panel',
+      duration: 200,
+      fail: (err) => {
+        // 只影响滚动定位，不影响记账功能；留日志便于排查
+        console.warn('[index] 手动面板滚动定位失败', err);
+      }
+    });
+  },
+
+  /** 保存成功后滚到入账结果卡：面板已收起，停在原地会错过确认和撤销窗口 */
+  scrollToSavedCard() {
+    wx.pageScrollTo({
+      selector: '.card-saved',
+      duration: 200,
+      fail: (err) => {
+        console.warn('[index] 结果卡滚动定位失败', err);
+      }
+    });
   },
 
   /** 撤销刚入账的一笔 */
@@ -678,6 +711,9 @@ Page({
         manualCategoryIndex: -1,
         manualCategoryLabel: '',
         manualNote: ''
+      }, () => {
+        // 面板已收起，滚到入账结果卡，让确认和 5 秒撤销窗口可见
+        this.scrollToSavedCard();
       });
       this.beginUndoCountdown();
       this.loadMonthSummary();
